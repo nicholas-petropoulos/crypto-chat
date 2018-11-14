@@ -34,7 +34,7 @@ if(isset($_POST["btn-submit"])) {
     $emailError = $emailData[1];
 
     // password checks
-    if(trim($_POST['password-confirm'] = "")) {
+    if(trim($_POST['password-confirm'] = "")) {//
         $confirmPasswordError = "No confirmation password entered!";
     } else {
         $confirmPassword = trim($_POST["password-confirm"]);
