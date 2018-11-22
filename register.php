@@ -53,7 +53,7 @@ if (isset($_POST["btn-submit"])) {
     if ($_POST['password'] != $_POST["confirm"]) {
         $passwordMatchError = "Passwords do not match!";
     } else {
-        $passwordEncrypt = crypt($password, "");
+        $passwordEncrypt = password_hash($password, PASSWORD_BCRYPT);
     }
 
     // If all fields above return no errors (strings are blank)
@@ -110,7 +110,7 @@ $title = "CryptoChat Registration";
 
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li class="menu-btn-login"><a href="login.html">Log In</a></li>
+                    <li class="menu-btn-login"><a href="login.php">Log In</a></li>
                 </ul>
             </div><!-- /.navbar-collapse -->
         </div><!-- /.container-fluid -->
@@ -120,7 +120,7 @@ $title = "CryptoChat Registration";
     <div class="jumbotron register-jumbotron" id="register-area">
         <h3>Please fill out your details to join</h3>
         <br/>
-        <form class="form-horizontal" id="register" method="post" action="register.php">
+        <form class="form-horizontal" id="register" method="post" action="register.php" enctype="multipart/form-data">
             <div class="form-group">
                 <label class="control-label col-sm-2" for="username">Username</label>
                 <div class="col-sm-9">

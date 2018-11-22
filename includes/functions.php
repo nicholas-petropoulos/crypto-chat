@@ -20,7 +20,7 @@ function trimAndQuery($fieldNameParam) {
         // using $con variable from config.php as global so we do not need a parameter
         global $con;
         // prepare the SQL statement to prevent SQL injection
-        $preparedSQL = $con->prepare("SELECT * FROM users WHERE $fieldNameParam= ?");
+        $preparedSQL = $con->prepare("SELECT * FROM users WHERE $fieldNameParam=?");
         // if returns true
         if($preparedSQL) {
             // s = type string, $fieldNameParam is the name of the field (ie. username)
