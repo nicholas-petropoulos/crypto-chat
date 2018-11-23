@@ -1,6 +1,7 @@
 body {
     background-color: #222 !important;
     color: white !important;
+
 }
 
 p {
@@ -13,10 +14,13 @@ textarea {
 
 .jumbotron, .panel {
     background-color: #2e2e2e !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
 }
 
+
 @media only screen and (min-width: 1200px) {
-    .chat-bubble {
+    .chat-bubble  {
         width: 600px;
         margin-bottom: 20px;
         padding: 20px;
@@ -27,8 +31,21 @@ textarea {
         word-wrap: break-word;
     }
 }
+/* Phone */
+@media only screen and (max-width: 639px) and (min-width: 200px) {
+    .chat-bubble {
+        width: 150px;
+        margin-bottom: 20px;
+        padding: 20px;
+        text-align: left;
+        font-weight: 600;
+        color: #fff;
+        border-radius: 24px;
+        word-wrap: break-word;
+    }
+}
 
-@media only screen and (max-width: 1200px) {
+@media only screen and (max-width: 1199px) and (min-width: 640px) {
     .chat-bubble {
         width: 300px;
         margin-bottom: 20px;
@@ -53,7 +70,7 @@ textarea {
 }
 
 .panel-chat {
-    margin-left: -5px !important;
+    margin-left: -25px !important;
 
 }
 
@@ -63,13 +80,25 @@ textarea {
 }
 
 .panel-conv {
-/ / margin-left: 0 px !important;
 }
 
 #msg-field {
-/ / overflow: auto;
     border-radius: 5px;
     margin-right: 2px;
+}
+
+.chat-input-group {
+    margin-top: -15px;
+    margin-left: -25px;
+}
+
+.input-group-addon-msgtimer {
+    width: 200px;
+    margin-left: 200px !important;
+}
+
+.dropdown-text {
+    margin: 0 auto;
 }
 
 /* 2e2e2e */

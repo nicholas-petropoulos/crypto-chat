@@ -58,11 +58,11 @@ if (isset($_POST["btn-submit"])) {
 
     // If all fields above return no errors (strings are blank)
     if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "") {
-        $preparedSQL = $con->prepare("INSERT INTO users (username, email, password) VALUES(?, ?, ?)");
+        $sql = $con->prepare("INSERT INTO users (username, email, password) VALUES(?, ?, ?)");
         // if statement only if parameters bind succesful
-        if($preparedSQL->bind_param("sss", $username, $email, $passwordEncrypt)) {
-            $preparedSQL->execute();
-            $preparedSQL->close();
+        if($sql->bind_param("sss", $username, $email, $passwordEncrypt)) {
+            $sql->execute();
+            $sql->close();
         } else {
             echo "Error";
         }
@@ -100,7 +100,8 @@ $title = "CryptoChat Registration";
                 </button>
                 <a class="navbar-brand" href="index.html">CryptoChat</a>
             </div>
-
+            <div>
+            </div>
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">

@@ -18,15 +18,16 @@ $usernameError = $passwordError = "";
 $loginError = "";
 
 if(isset($_POST['btn-login'])){
-    if(trim($_POST['username'])=="")
+    if(trim($_POST['username'])=="") {
         $usernameError = "enter username";
-    else
+    } else {
         $username = strtolower(trim($_POST['username']));
-
+    }
 
     if(trim($_POST['password'])=="")
         $passwordError = "enter password";
     else {
+        // check database for password
         $password = trim($_POST['password']);
         $preparedSQL = $con->prepare("SELECT password FROM users WHERE username=?");
         $preparedSQL->bind_param("s", $username);
@@ -83,7 +84,7 @@ if(isset($_POST['btn-login'])){
                 <ul class="nav navbar-nav">
                     <!--<li class="active"><a href="#">Learn More <span class="sr-only">(current)</span></a></li> -->
                     <li><a href="#">Learn More</a></li>
-                    <li><a href="register.html">Join Now</a></li>
+                    <li><a href="register.php">Join Now</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li class="active"><a href="#">Log In <span class="sr-only">(current)</span></a></li>
@@ -117,7 +118,6 @@ if(isset($_POST['btn-login'])){
                 </div>
             </div>
         </form>
-        </ul>
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
