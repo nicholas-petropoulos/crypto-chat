@@ -20,6 +20,9 @@ $option = trim($_POST["option"]);
 // add message to database
 if($option == "sendmessage") {
 
+// to encrypt and send message
+} else if($option == "reqkey") {
+
 } else if($option == "getchat") {
 
 } else if($option == "newchat") {

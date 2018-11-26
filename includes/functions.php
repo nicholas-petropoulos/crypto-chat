@@ -43,4 +43,5 @@ function trimAndQuery($fieldNameParam) {
     return [$userInput, ""];
 }
 
+
 ?>

@@ -35,7 +35,23 @@ function addMessage(party) {
         msgField.val("");
         // auto scroll down when new messages added
         $(".panel-chat-body").animate({ scrollTop: $(document).height()}, 50);
+        // get dropdown time entered
+        const dropdownTime = getDropdownTime();
+        // get session name - stored on hidden element of page
+        const sessionName = $(".session-name").text();
+        // encrypt with recipient's public key
+        if(recipient_public_key !== "") {
 
+        } else {
+            // error
+        }
+
+        // send message off
+        sendMessageDB("", dropdownTime);
+        // generate link
+        if($("#generate-link-checkbox").checked === true) {
+            // do stuff
+        }
     }
 }
 
@@ -56,9 +72,14 @@ function getDropdownTime() {
     } else if(dropdownVal == "Never") {
         return -1;
     }
-
+    return -1;
 }
 
+function encryptMessage(key, text) {
+    var rsa = new RSAKey();
+
+    return encryptedText;
+}
 /**
  *
  * @param messageText
@@ -81,5 +102,29 @@ function sendMessageDB(messageText, expireTime) {
 }
 
 function newChat(recipientUsername) {
+
+}
+
+// keytype can = private or public
+function getKey(keytype, user, authkey) {
+    $.ajax({
+        method:"POST",
+        url:"includes/request.php",
+        data:{
+            option: "reqkey",
+            type: keytype,
+            username: user,
+            auth: authkey,
+        },
+        async: false
+    }).success(function(success){
+
+    }).error(function(err){
+
+    });
+}
+
+function isGenerateLink(){
+
 
 }

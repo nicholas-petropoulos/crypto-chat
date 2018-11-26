@@ -14,8 +14,11 @@ textarea {
 
 .jumbotron, .panel {
     background-color: #2e2e2e !important;
-    padding-left: 0px !important;
-    padding-right: 0px !important;
+}
+
+.jumbotron-chat-area {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 

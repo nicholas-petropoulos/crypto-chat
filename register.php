@@ -55,6 +55,10 @@ if (isset($_POST["btn-submit"])) {
     } else {
         $passwordEncrypt = password_hash($password, PASSWORD_BCRYPT);
     }
+    // GENERATE PUB/PRIVATE KEY PAIR
+
+    // if no key present, generate both.
+
 
     // If all fields above return no errors (strings are blank)
     if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "") {
@@ -66,6 +70,9 @@ if (isset($_POST["btn-submit"])) {
         } else {
             echo "Error";
         }
+
+        $sql = $con->prepare("INSERT INTO keys (username, public_key, private_key) VALUES(?, ?, ?)");
+
     }
 }
 $title = "CryptoChat Registration";

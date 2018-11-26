@@ -29,15 +29,17 @@ if(isset($_POST['btn-login'])){
     else {
         // check database for password
         $password = trim($_POST['password']);
-        $preparedSQL = $con->prepare("SELECT password FROM users WHERE username=?");
-        $preparedSQL->bind_param("s", $username);
-        $preparedSQL->execute();
-        $result = $preparedSQL->get_result();
-        $val = $result->fetch_assoc();
-        if(!password_verify($password, $val["password"])) {
-            $passwordError = "Invalid password";
-        } else {
-            echo "GOOD";
+        $sql = $con->prepare("SELECT password FROM users WHERE username=?");
+        if($sql) {
+            $sql->bind_param("s", $username);
+            $sql->execute();
+            $result = $sql->get_result();
+            $val = $result->fetch_assoc();
+            if (!password_verify($password, $val["password"])) {
+                $passwordError = "Invalid password";
+            } else {
+                echo "GOOD";
+            }
         }
     }
 
