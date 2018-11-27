@@ -61,18 +61,63 @@ if (isset($_POST["btn-submit"])) {
 
 
     // If all fields above return no errors (strings are blank)
+    $keyGenSuccess = false;
     if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "") {
-        $sql = $con->prepare("INSERT INTO users (username, email, password) VALUES(?, ?, ?)");
-        // if statement only if parameters bind succesful
-        if($sql->bind_param("sss", $username, $email, $passwordEncrypt)) {
-            $sql->execute();
-            $sql->close();
+        if($sql = $con->prepare("INSERT INTO users (username, email, password) VALUES(?, ?, ?)")) {
+            // if statement only if parameters bind succesful
+            if ($sql->bind_param("sss", $username, $email, $passwordEncrypt)) {
+                $sql->execute();
+                $sql->close();
+            } else {
+                echo "Error creating user, contact administrator";
+            }
         } else {
-            echo "Error";
+            echo "Error creating user, contact administrator";
+        }
+        // key config
+        // enable extension - extension=openssl in php.ini
+        $config = array(
+            //"config" => $openSSLConfigPath,
+            "digest_alg" => "sha512",
+            "private_key_bits" => 4096,
+            "private_key_type" => OPENSSL_KEYTYPE_RSA,
+        );
+        // generate public and private key
+        if($key = openssl_pkey_new($config)) {
+            // Extract private key from $key to $privKey
+            openssl_pkey_export($key, $privKey);
+            // Extract the public key from $key to $pubKey
+            $pubKey = openssl_pkey_get_details($key);
+            $pubKey = $pubKey["key"];
+        } else {
+            echo openssl_error_string();
         }
 
-        $sql = $con->prepare("INSERT INTO keys (username, public_key, private_key) VALUES(?, ?, ?)");
+        // using libsodium
+        $keypair = sodium_crypto_box_keypair();
+        $publicKey = sodium_crypto_box_publickey($keypair);
+        $encrypted = sodium_crypto_box_seal(
+            $plaintextMessage,
+            $publicKey
+        );
+        // ...
+        $decrypted = sodium_crypto_box_seal_open(
+            $encrypted,
+            $keypair
+        );
 
+        if($sql = $con->prepare("INSERT INTO keys (username, public_key, private_key) VALUES(?, ?, ?)")) {
+            if ($sql->bind_param("sss", $username, $pubKey, $privKey)) {
+                $sql->execute();
+                $sql->close();
+            } else {
+                echo "Error generating keys - contact administrator";
+            }
+        } else {
+            echo "Error generating keys - contact administrator";
+        }
+        // free resources
+        //openssl_pkey_free($pubKey);
     }
 }
 $title = "CryptoChat Registration";
