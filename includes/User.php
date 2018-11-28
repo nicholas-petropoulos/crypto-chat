@@ -31,8 +31,9 @@ class User {
         }
         return "";
     }
-
-    function getUserMessages($username) {
+    // array format - $arr = [[$msg],[$msg],[$msg],[$msg]...]
+    // return array [$recipientUsername, $messageText, $messageDate, $timeExpire]
+    function getUserMessages($username, $recUsername) {
         global $con;
         // messages ordered oldest to newest (top to bottom) and users grouped together
         $sql = $con->prepare("SELECT * FROM messages WHERE sender_username=? ORDER BY TIMESTAMP(message_date) DESC, recipient_username ASC");
@@ -40,17 +41,28 @@ class User {
             $sql->bind_param("s", $username);
             $sql->execute();
             $result = $sql->get_result();
+            $messages = [];
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     $messageText = $row["message_text"];
+                    // TODO: DECRYPT
+                    $messageDate = $row["message_date"];
                     $timeExpire = $row["time_expire"];
                     $recipientUsername = $row["recipient_username"];
-                    echo "Message text: ". $messageText . " - Expire: " . $timeExpire . " - Rec: " . $recipientUsername;
-                    // add to array - possibly 2d array
+                    // if a recipient username is passed through, filter and return only those messages
+                    if($recipientUsername != "" && ($recUsername == $recipientUsername)) {
+                        $messages[] = [$recipientUsername, $messageText, $messageDate, $timeExpire];
+                    // return all messages if no filter added
+                    } else if($recipientUsername == "") {
+                        $messages[] = [$recipientUsername, $messageText, $messageDate, $timeExpire];
+                    }
+
                 }
-                // return array of messages
-                $usersMessaged = $result["recipient_username"];
+
+                    //echo "Message text: ". $messageText . " - Expire: " . $timeExpire . " - Rec: " . $recipientUsername;
+                    // add to array - possibly 2d array
             }
+            return $messages;
         }
 
     }

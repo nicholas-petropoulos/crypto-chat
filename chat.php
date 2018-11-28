@@ -7,8 +7,42 @@
  */
 session_start();
 include "includes/User.php";
-$user = new User();
+$username = $_SESSION["username"];
+$userObj = new User();
 
+// get recipientUsername from username on top of messages box
+$dom = new DOMDocument();
+$recipientUsername = $dom->getElementById("username-label");
+if(isset($recipientUsername)) {
+    foreach($recipientUsername->attributes as $attr) {
+        $nodeVal = $attr->nodeValue;
+        echo $nodeVal;
+    }
+} else {
+    echo "Not set";
+}
+
+echo "Rec: $recipientUsername";
+
+
+$messages = $userObj->getUserMessages("npetro","");
+foreach ($messages as $msg) {
+    // $msg[0] == recipient_username, $msg[1] == msgText
+    if($msg[0] == $recipientUsername) {
+        if($msg[1] == $username) {
+            $msgParty = "sender";
+        } else {
+            $msgParty = "recipient";
+        }
+        echo '<script>addChatBubble('. $msg[1] .', '. $msgParty .')</script>';
+        echo "test";
+    } else {
+        echo "fail";
+    }
+}
+
+
+// change getUserMessages to logged in user - currently testing
 ?>
 
 <!DOCTYPE html>
@@ -46,6 +80,7 @@ $user = new User();
                     <!--<li class="active"><a href="#">Learn More <span class="sr-only">(current)</span></a></li> -->
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
+                    <li id="logged-in-user"><a href="#">Welcome <?php echo $username?></a></li>
                     <li class="nav-log-out"><a href="logout.php">Log Out</a></li>
                 </ul>
             </div><!-- /.navbar-collapse -->
@@ -54,11 +89,9 @@ $user = new User();
 </div>
 <div class="container-fluid container-article remove-padding">
     <div class="jumbotron jumbotron-chat-area">
-        <div class="row">
+        <div class="row chat-row">
             <div class="col-xs-12">
             </div>
-
-            <div class="container"><h3>Welcome <?php echo $_SESSION["username"]; ?></h3></div>
             <div class="col-xs-4">
                 <div class="visible-md hidden-xs">test</div>
                 <div class="panel panel-default panel-conv">
@@ -85,9 +118,8 @@ $user = new User();
             <div class="col-xs-8">
                 <div class="panel panel-default panel-chat">
                     <div class="panel-heading panel-chat-heading">
-
                         <h3 class="panel-title panel-chat-title"><i class="glyphicon glyphicon-arrow-left "></i>&nbsp;&nbsp;
-                            username | XX:XX last msg sent</h3>
+                            <span id="username-label">npetro</span> | <span id="time-last-sent-label">XX:XX PM</span></h3>
                     </div>
                     <div class="panel-body panel-chat-body">
                         <div class="chat-bubble chat-sender">Hello there test</div>
@@ -121,7 +153,7 @@ $user = new User();
         </div>
     </div>
 </div>
-<div hidden class="session-name"><?php echo $_SESSION["username"]; ?></div>
+<!--<div hidden class="session-name"><?php //echo $_SESSION["username"]; ?></div>-->
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
@@ -129,8 +161,9 @@ $user = new User();
 <script src="js/message.js"></script>
 <script src="js/autosize.js"></script>
 <script>
-    let public_key = <?php echo $user->getKey("public_key", $_SESSION["username"]) ?>;
-    let private_key = <?php echo $user->getKey("private_key", $_SESSION["username"]); ?>;
+    // add listener to see if text updates
+    var recipientUser = $("#username-label").text();
+    var messages = getUserMessages(recipientUser);
 </script>
 </body>
 <footer>

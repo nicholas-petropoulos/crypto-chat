@@ -11,10 +11,11 @@ error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
 include "config.php";
+include "User.php";
 
 $username = $_SESSION["username"];
 // POST option
-$option = trim($_POST["option"]);
+$option = trim($_REQUEST["option"]);
 // user object
 $userObj = new User();
 
@@ -24,12 +25,21 @@ if($option == "sendmessage") {
 
 // to encrypt and send message
 } else if($option == "reqkey") {
-    if($_POST["type"] == "public_key") {
-        $reqUser = $_POST["reqUser"];
-        $userObj->getKey("public_key", $reqUser);
+    if($_REQUEST["type"] == "public_key") {
+        $reqUser = $_REQUEST["reqUser"];
+        echo $userObj->getKey("public_key", $reqUser);
     }
-} else if($option == "getchat") {
-
+} else if($option == "getmessages") {
+    header('Content-type: application/json');
+    $reqUser = $_REQUEST["reqUser"];
+    $messages = array_values($userObj->getUserMessages($username, $reqUser));
+   /* foreach($messages as $msg) {
+        echo json_encode($msg);
+    }*/
+    echo json_encode($messages);
+    //echo json_encode($messages);
+    //echo json_encode($messages, true);
+    //echo "hello";
 } else if($option == "newchat") {
 
 }

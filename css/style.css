@@ -22,6 +22,10 @@ textarea {
     margin-top: -15px;
 }
 
+.chat-row {
+    margin-top: -40px !important;
+}
+
 @media only screen and (min-width: 1200px) {
     .chat-bubble  {
         width: 600px;
@@ -104,4 +108,8 @@ textarea {
     margin: 0 auto;
 }
 
+#logged-in-user a {
+    color: grey !important;
+    text-decoration: none !important;
+}
 /* 2e2e2e */
