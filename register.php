@@ -9,7 +9,7 @@
 include "includes/config.php";
 include "includes/functions.php";
 // Registration variables
-$username = $email = $password = $confirmPassword = $passwordEncrypt = "";
+$username = $email = $password = $confirmPassword = $passwordHashed = "";
 
 // Reg Error variables
 $usernameError = $emailError = $passwordError = $confirmPasswordError = $passwordMatchError = "";
@@ -53,7 +53,7 @@ if (isset($_POST["btn-submit"])) {
     if ($_POST['password'] != $_POST["confirm"]) {
         $passwordMatchError = "Passwords do not match!";
     } else {
-        $passwordEncrypt = password_hash($password, PASSWORD_BCRYPT);
+        $passwordHashed = password_hash($password, PASSWORD_BCRYPT);
     }
     // GENERATE PUB/PRIVATE KEY PAIR
 
@@ -65,7 +65,7 @@ if (isset($_POST["btn-submit"])) {
     if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "") {
         if($sql = $con->prepare("INSERT INTO users (username, email, password) VALUES(?, ?, ?)")) {
             // if statement only if parameters bind succesful
-            if ($sql->bind_param("sss", $username, $email, $passwordEncrypt)) {
+            if ($sql->bind_param("sss", $username, $email, $passwordHashed)) {
                 $sql->execute();
                 $sql->close();
             } else {
@@ -77,7 +77,7 @@ if (isset($_POST["btn-submit"])) {
         // key config
         // enable extension - extension=openssl in php.ini
         $config = array(
-            //"config" => $openSSLConfigPath,
+            "config" => $openSSLConfigPath,
             "digest_alg" => "sha512",
             "private_key_bits" => 4096,
             "private_key_type" => OPENSSL_KEYTYPE_RSA,
@@ -85,15 +85,22 @@ if (isset($_POST["btn-submit"])) {
         // generate public and private key
         if($key = openssl_pkey_new($config)) {
             // Extract private key from $key to $privKey
-            openssl_pkey_export($key, $privKey);
+            // passphrase is user pass?
+            //$privKey = null;
+            openssl_pkey_export($key, $privKey, $password, $openSSLConfigPathArr);
             // Extract the public key from $key to $pubKey
             $pubKey = openssl_pkey_get_details($key);
             $pubKey = $pubKey["key"];
+            //echo "Key: $pubKey";
+            echo "PrivKey: $privKey";
+            var_dump($privKey);
         } else {
             echo openssl_error_string();
         }
 
+        /*
         // using libsodium
+        // read - http://php.net/manual/en/sodium.installation.php
         $keypair = sodium_crypto_box_keypair();
         $publicKey = sodium_crypto_box_publickey($keypair);
         $encrypted = sodium_crypto_box_seal(
@@ -105,8 +112,9 @@ if (isset($_POST["btn-submit"])) {
             $encrypted,
             $keypair
         );
-
-        if($sql = $con->prepare("INSERT INTO keys (username, public_key, private_key) VALUES(?, ?, ?)")) {
+        */
+        echo "KeyPub: $pubKey";
+        if($sql = $con->prepare("INSERT INTO user_keys (username, public_key, private_key) VALUES(?, ?, ?)")) {
             if ($sql->bind_param("sss", $username, $pubKey, $privKey)) {
                 $sql->execute();
                 $sql->close();
