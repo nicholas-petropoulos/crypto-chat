@@ -40,6 +40,12 @@ function addMessage(party) {
         // get session name - stored on hidden element of page
         const sessionName = $(".session-name").text();
         // encrypt with recipient's public key
+
+        // search page for recipient getting from
+        // implement
+
+        // retrieve key
+        const key = getKey("public_key", "ntest100")
         if(recipient_public_key !== "") {
 
         } else {
@@ -105,7 +111,11 @@ function newChat(recipientUsername) {
 
 }
 
-// keytype can = private or public
+function loeadConversations() {
+
+}
+
+// keytype can = public_key or private_key
 function getKey(keytype, user, authkey) {
     $.ajax({
         method:"POST",
@@ -113,14 +123,14 @@ function getKey(keytype, user, authkey) {
         data:{
             option: "reqkey",
             type: keytype,
-            username: user,
+            reqUser: user,
             auth: authkey,
         },
         async: false
     }).success(function(success){
-
+        return success;
     }).error(function(err){
-
+        return err;
     });
 }
 

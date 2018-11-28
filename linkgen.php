@@ -12,6 +12,7 @@ include "includes/config.php";
 
 $username = $_SESSION["username"];
 $option = trim($_POST["option"]);
+$messageID = 0;
 
 if($option == "linkgen") {
     // put message details on page

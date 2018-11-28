@@ -58,6 +58,7 @@ $user = new User();
             <div class="col-xs-12">
             </div>
 
+            <div class="container"><h3>Welcome <?php echo $_SESSION["username"]; ?></h3></div>
             <div class="col-xs-4">
                 <div class="visible-md hidden-xs">test</div>
                 <div class="panel panel-default panel-conv">

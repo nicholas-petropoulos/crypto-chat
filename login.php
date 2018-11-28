@@ -37,8 +37,6 @@ if(isset($_POST['btn-login'])){
             $val = $result->fetch_assoc();
             if (!password_verify($password, $val["password"])) {
                 $passwordError = "Invalid password";
-            } else {
-                echo "GOOD";
             }
         }
     }
@@ -46,7 +44,6 @@ if(isset($_POST['btn-login'])){
     if($usernameError == "" && $passwordError==""){
         $_SESSION['username'] = $username;
         header("Location: chat.php");
-        echo "SUCCESS";
     }
 
 }

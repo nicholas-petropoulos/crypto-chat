@@ -12,7 +12,7 @@ include "includes/functions.php";
 $username = $email = $password = $confirmPassword = $passwordHashed = "";
 
 // Reg Error variables
-$usernameError = $emailError = $passwordError = $confirmPasswordError = $passwordMatchError = "";
+$usernameError = $emailError = $passwordError = $confirmPasswordError = $passwordMatchError = $keyGenMsg = "";
 
 /**
  * Registration fields
@@ -61,71 +61,42 @@ if (isset($_POST["btn-submit"])) {
 
 
     // If all fields above return no errors (strings are blank)
-    $keyGenSuccess = false;
     if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "") {
-        if($sql = $con->prepare("INSERT INTO users (username, email, password) VALUES(?, ?, ?)")) {
+        // key config
+        // enable extension - extension=openssl in php.ini
+        $config = array(
+            "digest_alg" => "sha512",
+            "private_key_bits" => 4096,
+            "private_key_type" => OPENSSL_KEYTYPE_RSA,
+            "config" => $openSSLConfigPath
+        );
+        // generate public and private key
+        if($key = openssl_pkey_new($config)) {
+            // Extract private key from $key to $privKey
+            openssl_pkey_export($key, $privateKey, NULL, $config);
+
+            // Extract the public key from $key to $pubKey
+            $publicKey = openssl_pkey_get_details($key);
+            $publicKey = $publicKey["key"];
+        }
+        if($sql = $con->prepare("INSERT INTO users (username, email, password, public_key, private_key) VALUES(?, ?, ?, ?, ?)")) {
             // if statement only if parameters bind succesful
-            if ($sql->bind_param("sss", $username, $email, $passwordHashed)) {
+            if ($sql->bind_param("sssss", $username, $email, $passwordHashed, $publicKey, $privateKey)) {
                 $sql->execute();
                 $sql->close();
+                openssl_pkey_free($key);
+                // set username as if was logging in
+                session_start();
+                $_SESSION['username'] = $username;
+                header("Location: chat.php");
             } else {
                 echo "Error creating user, contact administrator";
             }
         } else {
             echo "Error creating user, contact administrator";
         }
-        // key config
-        // enable extension - extension=openssl in php.ini
-        $config = array(
-            "config" => $openSSLConfigPath,
-            "digest_alg" => "sha512",
-            "private_key_bits" => 4096,
-            "private_key_type" => OPENSSL_KEYTYPE_RSA,
-        );
-        // generate public and private key
-        if($key = openssl_pkey_new($config)) {
-            // Extract private key from $key to $privKey
-            // passphrase is user pass?
-            //$privKey = null;
-            openssl_pkey_export($key, $privKey, $password, $openSSLConfigPathArr);
-            // Extract the public key from $key to $pubKey
-            $pubKey = openssl_pkey_get_details($key);
-            $pubKey = $pubKey["key"];
-            //echo "Key: $pubKey";
-            echo "PrivKey: $privKey";
-            var_dump($privKey);
-        } else {
-            echo openssl_error_string();
-        }
 
-        /*
-        // using libsodium
-        // read - http://php.net/manual/en/sodium.installation.php
-        $keypair = sodium_crypto_box_keypair();
-        $publicKey = sodium_crypto_box_publickey($keypair);
-        $encrypted = sodium_crypto_box_seal(
-            $plaintextMessage,
-            $publicKey
-        );
-        // ...
-        $decrypted = sodium_crypto_box_seal_open(
-            $encrypted,
-            $keypair
-        );
-        */
-        echo "KeyPub: $pubKey";
-        if($sql = $con->prepare("INSERT INTO user_keys (username, public_key, private_key) VALUES(?, ?, ?)")) {
-            if ($sql->bind_param("sss", $username, $pubKey, $privKey)) {
-                $sql->execute();
-                $sql->close();
-            } else {
-                echo "Error generating keys - contact administrator";
-            }
-        } else {
-            echo "Error generating keys - contact administrator";
-        }
-        // free resources
-        //openssl_pkey_free($pubKey);
+
     }
 }
 $title = "CryptoChat Registration";
@@ -220,9 +191,11 @@ $title = "CryptoChat Registration";
                 <div class="col-sm-offset-2 col-sm-10">
                     <p id="password-error-msg"><?php if (!$passwordMatchError == "") {
                             echo $passwordMatchError;
-                        } ?></p>
-                    <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-success">Register</button>
+                        } echo $keyGenMsg; ?></p>
+                    <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-success">Register
+
                 </div>
+
             </div>
         </form>
     </div>

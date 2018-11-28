@@ -15,6 +15,8 @@ include "config.php";
 $username = $_SESSION["username"];
 // POST option
 $option = trim($_POST["option"]);
+// user object
+$userObj = new User();
 
 // Potential options
 // add message to database
@@ -22,7 +24,10 @@ if($option == "sendmessage") {
 
 // to encrypt and send message
 } else if($option == "reqkey") {
-
+    if($_POST["type"] == "public_key") {
+        $reqUser = $_POST["reqUser"];
+        $userObj->getKey("public_key", $reqUser);
+    }
 } else if($option == "getchat") {
 
 } else if($option == "newchat") {

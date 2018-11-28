@@ -19,8 +19,8 @@ textarea {
 .jumbotron-chat-area {
     padding-left: 0 !important;
     padding-right: 0 !important;
+    margin-top: -15px;
 }
-
 
 @media only screen and (min-width: 1200px) {
     .chat-bubble  {
@@ -35,7 +35,7 @@ textarea {
     }
 }
 /* Phone */
-@media only screen and (max-width: 639px) and (min-width: 200px) {
+@media only screen and (max-width: 640px) and (min-width: 200px) {
     .chat-bubble {
         width: 150px;
         margin-bottom: 20px;
@@ -48,7 +48,7 @@ textarea {
     }
 }
 
-@media only screen and (max-width: 1199px) and (min-width: 640px) {
+@media only screen and (max-width: 1200px) and (min-width: 640px) {
     .chat-bubble {
         width: 300px;
         margin-bottom: 20px;
