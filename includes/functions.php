@@ -20,16 +20,16 @@ function trimAndQuery($fieldNameParam) {
         // using $con variable from config.php as global so we do not need a parameter
         global $con;
         // prepare the SQL statement to prevent SQL injection
-        $preparedSQL = $con->prepare("SELECT * FROM users WHERE $fieldNameParam= ?");
+        $sql = $con->prepare("SELECT * FROM users WHERE $fieldNameParam=?");
         // if returns true
-        if($preparedSQL) {
+        if($sql) {
             // s = type string, $fieldNameParam is the name of the field (ie. username)
             // $fieldName is the user's input
-            $preparedSQL->bind_param("s", $userInput);
+            $sql->bind_param("s", $userInput);
             // execute query
-            $preparedSQL->execute();
+            $sql->execute();
             // store result
-            $result = $preparedSQL->get_result();
+            $result = $sql->get_result();
             //check if username exists
             if ($result->num_rows > 0){
                 return [$userInput, $userInput . " exists"];
@@ -37,10 +37,11 @@ function trimAndQuery($fieldNameParam) {
         } else {
             return [$userInput, "SQL error"];
         }
-        $preparedSQL->close();
+        $sql->close();
     }
     // return user input and empty string if no error
     return [$userInput, ""];
 }
+
 
 ?>
