@@ -65,9 +65,16 @@ textarea {
     }
 }
 
+#msg-sent-date {
+    font-size: .9em;
+    text-align: center;
+    padding-bottom: 4px;
+}
+
 .chat-sender {
     background-color: #337ab7;
     margin-left: 5px;
+
 }
 
 .chat-self {
@@ -112,4 +119,6 @@ textarea {
     color: grey !important;
     text-decoration: none !important;
 }
+
+
 /* 2e2e2e */

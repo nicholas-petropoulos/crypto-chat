@@ -1,5 +1,6 @@
 const msgField = $("#msg-field");
 const btnMsgSend = $(".btn-msg-send");
+const dropdownVal = $(".msg-timer-dropdown").val();
 
 $(document).ready(function () {
     // applies auto-resizing functionality to message field
@@ -29,7 +30,7 @@ function addMessage(party) {
     // check if not empty
     if (msgText) {
         // add the chat bubble to chat window
-        addChatBubble(msgText, party);
+        addChatBubble(msgText, party, "Now", dropdownVal());
         // parameter if executed by server or not, isAuto = true for server so we do not do this
         // get dropdown time entered
         const dropdownTime = getDropdownTime();
@@ -41,7 +42,7 @@ function addMessage(party) {
         // implement
         const recipientUsername = $(".username-label").val();
         // retrieve key
-        const key = getKey("public_key", "ntest100", "");
+        const key = getKey("public_key", "ntest100", "").responseText;
         alert(key);
         // send message off
         sendMessageDB("", dropdownTime);
@@ -53,8 +54,9 @@ function addMessage(party) {
     }
 }
 
-function addChatBubble(msgText, party) {
+function addChatBubble(msgText, party, msgDate, msgExpire) {
     // add chat bubblle
+    $('<div id="msg-sent-date">' + msgDate + ' - expire: ' + msgExpire +'</div>').appendTo(".panel-chat-body");
     $('<div class="chat-bubble chat-' + party + '">' + msgText + '</div>').appendTo(".panel-chat-body");
     // clear input
     msgField.val("");
@@ -67,16 +69,15 @@ function addChatBubble(msgText, party) {
  * @returns {number} - seconds
  */
 function getDropdownTime() {
-    const dropdownVal = $(".msg-timer-dropdown").val();
-    if (dropdownVal == "10 seconds") {
+    if (dropdownVal === "10 seconds") {
         return 10;
-    } else if (dropdownVal == "1 minute") {
+    } else if (dropdownVal === "1 minute") {
         return 60
-    } else if (dropdownVal == "1 hour") {
+    } else if (dropdownVal === "1 hour") {
         return 3600;
-    } else if (dropdownVal == "24 hours") {
+    } else if (dropdownVal === "24 hours") {
         return 86400;
-    } else if (dropdownVal == "Never") {
+    } else if (dropdownVal === "Never") {
         return -1;
     }
     return -1;
@@ -117,14 +118,34 @@ function getUserMessages(user) {
             option: "getmessages",
             reqUser: user,
         },
-        dataType: "JSON",
         async: false
     }).done(function (data) {
-        const jsonResponse = JSON.parse(data);
-        alert(data);
-        for(const r in jsonResponse) {
-            //addChatBubble();
+        //const jsonResponse = JSON.parse(data);
+        //const response = JSON.parse(data);
+        /*
+        for (var key in response) {
+            if(response.hasOwnProperty(key)) {
+                alert(key + " -> " + response[key]);
+            }
+        }*/
+        for(var i=0; i < data.length; i++) {
+            var msgText = data[i].msg_text;
+            var party = data[i].recipient_user;
+            var messageDate = data[i].msg_date;
+            var messageExpire = data[i].msg_expire;
+            // to determine if it is send or received messages
+            if(party !== user) {
+                addChatBubble(msgText, "sender",messageDate, messageExpire);
+            } else {
+                addChatBubble(msgText, "self", messageDate, messageExpire);
+            }
+            //alert(data[i].msg_text);
+
         }
+        //alert(data[0].msg_text);
+        //alert(data.responseText);
+       // alert(data.responseText.msg_text);
+
     });
 }
 
@@ -148,10 +169,8 @@ function getKey(keytype, user, authkey) {
             auth: authkey,
         },
         async: false
-    }).success(function (success) {
+    }).done(function (success) {
         return success;
-    }).error(function (err) {
-        return err;
     });
 }
 

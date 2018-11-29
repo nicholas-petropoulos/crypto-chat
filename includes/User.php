@@ -49,13 +49,13 @@ class User {
                     $messageDate = $row["message_date"];
                     $timeExpire = $row["time_expire"];
                     $recipientUsername = $row["recipient_username"];
-                    // if a recipient username is passed through, filter and return only those messages
-                    if($recipientUsername != "" && ($recUsername == $recipientUsername)) {
-                        $messages[] = [$recipientUsername, $messageText, $messageDate, $timeExpire];
+                    // if a recipient username is passed through, filter and return only those messages OR no filter added
+                    if(($recipientUsername != "" && ($recUsername == $recipientUsername)) || $recipientUsername == "") {
+                        $messages[] = ["recipient_user" => $recipientUsername, "msg_text" => $messageText, "msg_date" => $messageDate, "time_expire" => $timeExpire];
                     // return all messages if no filter added
-                    } else if($recipientUsername == "") {
-                        $messages[] = [$recipientUsername, $messageText, $messageDate, $timeExpire];
-                    }
+                    } /*else if($recipientUsername == "") {
+                        $messages[] = ["rec_user" => $recipientUsername, "msg_text" => $messageText, "msg_date" => $messageDate, "time_expire" => $timeExpire];
+                    }*/
 
                 }
 
