@@ -42,6 +42,4 @@ function trimAndQuery($fieldNameParam) {
     // return user input and empty string if no error
     return [$userInput, ""];
 }
-
-
 ?>

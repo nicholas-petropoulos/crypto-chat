@@ -9,10 +9,10 @@
 include "includes/config.php";
 include "includes/functions.php";
 // Registration variables
-$username = $email = $password = $confirmPassword = $passwordEncrypt = "";
+$username = $email = $password = $confirmPassword = $passwordHashed = "";
 
 // Reg Error variables
-$usernameError = $emailError = $passwordError = $confirmPasswordError = $passwordMatchError = "";
+$usernameError = $emailError = $passwordError = $confirmPasswordError = $passwordMatchError = $keyGenMsg = "";
 
 /**
  * Registration fields
@@ -53,7 +53,7 @@ if (isset($_POST["btn-submit"])) {
     if ($_POST['password'] != $_POST["confirm"]) {
         $passwordMatchError = "Passwords do not match!";
     } else {
-        $passwordEncrypt = password_hash($password, PASSWORD_BCRYPT);
+        $passwordHashed = password_hash($password, PASSWORD_BCRYPT);
     }
     // GENERATE PUB/PRIVATE KEY PAIR
 
@@ -62,16 +62,40 @@ if (isset($_POST["btn-submit"])) {
 
     // If all fields above return no errors (strings are blank)
     if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "") {
-        $sql = $con->prepare("INSERT INTO users (username, email, password) VALUES(?, ?, ?)");
-        // if statement only if parameters bind succesful
-        if($sql->bind_param("sss", $username, $email, $passwordEncrypt)) {
-            $sql->execute();
-            $sql->close();
+        // key config
+        // enable extension - extension=openssl in php.ini
+        $config = array(
+            "digest_alg" => "sha512",
+            "private_key_bits" => 4096,
+            "private_key_type" => OPENSSL_KEYTYPE_RSA,
+            "config" => $openSSLConfigPath
+        );
+        // generate public and private key
+        if($key = openssl_pkey_new($config)) {
+            // Extract private key from $key to $privKey
+            openssl_pkey_export($key, $privateKey, NULL, $config);
+
+            // Extract the public key from $key to $pubKey
+            $publicKey = openssl_pkey_get_details($key);
+            $publicKey = $publicKey["key"];
+        }
+        if($sql = $con->prepare("INSERT INTO users (username, email, password, public_key, private_key) VALUES(?, ?, ?, ?, ?)")) {
+            // if statement only if parameters bind succesful
+            if ($sql->bind_param("sssss", $username, $email, $passwordHashed, $publicKey, $privateKey)) {
+                $sql->execute();
+                $sql->close();
+                openssl_pkey_free($key);
+                // set username as if was logging in
+                session_start();
+                $_SESSION['username'] = $username;
+                header("Location: chat.php");
+            } else {
+                echo "Error creating user, contact administrator";
+            }
         } else {
-            echo "Error";
+            echo "Error creating user, contact administrator";
         }
 
-        $sql = $con->prepare("INSERT INTO keys (username, public_key, private_key) VALUES(?, ?, ?)");
 
     }
 }
@@ -167,9 +191,11 @@ $title = "CryptoChat Registration";
                 <div class="col-sm-offset-2 col-sm-10">
                     <p id="password-error-msg"><?php if (!$passwordMatchError == "") {
                             echo $passwordMatchError;
-                        } ?></p>
-                    <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-success">Register</button>
+                        } echo $keyGenMsg; ?></p>
+                    <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-success">Register
+
                 </div>
+
             </div>
         </form>
     </div>
