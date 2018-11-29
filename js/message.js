@@ -83,21 +83,21 @@ function addChatBubble(msgText, party, msgDate, msgTimeExpire) {
     msgCounter++;
 }
 
-/**
- * Not mine
- * https://stackoverflow.com/questions/20618355/the-simplest-possible-javascript-countdown-timer
- * @param duration
- * @param msgExpireElement
- */
+
 function initLocalCountdownDelete(duration, mExpireElement, mDateElement, cBubble) {
     var timer = duration, minutes, seconds;
     var interval = setInterval(function () {
         minutes = parseInt(timer / 60, 10);
         seconds = parseInt(timer % 60, 10);
 
+        if(minutess < 10) {
+            minutes = "0" + minutes;
+        } else if(seconds < 10) {
+            seconds = "0" + seconds;
+        }
 
-        minutes = minutes < 10 ? "0" + minutes : minutes;
-        seconds = seconds < 10 ? "0" + seconds : seconds;
+        //minutes = minutes < 10 ? "0" + minutes : minutes;
+        //seconds = seconds < 10 ? "0" + seconds : seconds;
 
         mExpireElement.text(" - Time remaining: " + minutes + ":" + seconds);
 /*
@@ -106,7 +106,6 @@ function initLocalCountdownDelete(duration, mExpireElement, mDateElement, cBubbl
         }*/
         console.log(timer);
         if(timer <= 0) {
-            console.log("DUR=0");
             mExpireElement.remove();
             mDateElement.remove();
             cBubble.remove();
@@ -178,14 +177,6 @@ function getUserMessages(user) {
         },
         async: false
     }).done(function (data) {
-        //const jsonResponse = JSON.parse(data);
-        //const response = JSON.parse(data);
-        /*
-        for (var key in response) {
-            if(response.hasOwnProperty(key)) {
-                alert(key + " -> " + response[key]);
-            }
-        }*/
         for(var i=0; i < data.length; i++) {
             var msgText = data[i].msg_text;
             var party = data[i].recipient_user;
@@ -197,12 +188,7 @@ function getUserMessages(user) {
             } else {
                 addChatBubble(msgText, "self", messageDate, messageExpire);
             }
-            //alert(data[i].msg_text);
-
         }
-        //alert(data[0].msg_text);
-        //alert(data.responseText);
-       // alert(data.responseText.msg_text);
 
     });
 }
@@ -228,26 +214,10 @@ function getKey(keytype, user, authkey) {
     });
 }
 
-function sendCountdownDelete(message, time, authkey) {
-    $.ajax({
-        method: "POST",
-        url: "includes/request.php",
-        data: {
-            option: "reqkey",
-            type: keytype,
-            reqUser: user,
-            auth: authkey,
-        },
-        async: false
-    }).done(function (success) {
-        return success;
-    });
-}
-
 
 // should run every 20-30 sec
 function getLatestMessage() {
-} //TODO: implement method
+} //TODO: implement method - checks on interval
 
 function isGenerateLink() {
 //TODO: implement method

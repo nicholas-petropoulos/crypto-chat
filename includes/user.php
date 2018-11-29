@@ -49,7 +49,8 @@ class user {
                     // TODO: DECRYPT
                     $messageDate = $row["message_date"];
                     $timeExpire = $row["time_expire"];
-                    $timestamp = strtotime()
+                    // TODO: Delete message if time after
+                    //$timestamp = strtotime();
                     $recipientUsername = $row["recipient_username"];
                     // if a recipient username is passed through, filter and return only those messages OR no filter added
                     if(($recipientUsername != "" && ($recUsername == $recipientUsername)) || $recipientUsername == "") {
@@ -72,5 +73,5 @@ class user {
         $this->recipient = $recipient;
     }
 
-    function createToken()
+    function createToken() {}
 }

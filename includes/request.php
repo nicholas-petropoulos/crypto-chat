@@ -23,7 +23,7 @@ $userObj = new user();
 // add message to database
 if($option == "sendmessage") {
     $tme = new DateTimeZone(DateTimeZone::AMERICA);
-    
+
     $timeNow = date("Y-m-d H:i:s");
     $time = new DateTime($timeNow);
 // to encrypt and send message
