@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by IntelliJ IDEA.
- * User: Nicholas
+ * user: Nicholas
  * Date: 11/23/2018
  * Time: 5:13 PM
  */
+session_start();
 include "config.php";
 
-class User {
+class user {
     var $sender;
     var $recipient;
     var $recipientPubKey;
@@ -48,6 +49,7 @@ class User {
                     // TODO: DECRYPT
                     $messageDate = $row["message_date"];
                     $timeExpire = $row["time_expire"];
+                    $timestamp = strtotime()
                     $recipientUsername = $row["recipient_username"];
                     // if a recipient username is passed through, filter and return only those messages OR no filter added
                     if(($recipientUsername != "" && ($recUsername == $recipientUsername)) || $recipientUsername == "") {
@@ -69,4 +71,6 @@ class User {
     function setRecipient($recipient) {
         $this->recipient = $recipient;
     }
+
+    function createToken()
 }

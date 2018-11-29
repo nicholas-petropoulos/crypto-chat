@@ -65,7 +65,7 @@ textarea {
     }
 }
 
-#msg-sent-date {
+.msg-detail {
     font-size: .9em;
     text-align: center;
     padding-bottom: 4px;

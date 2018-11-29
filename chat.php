@@ -1,17 +1,17 @@
 <?php
 /**
  * Created by IntelliJ IDEA.
- * User: Nicholas
+ * user: Nicholas
  * Date: 11/21/2018
  * Time: 8:31 PM
  */
 session_start();
-include "includes/User.php";
+include "includes/user.php";
 $username = $_SESSION["username"];
 if(isset($username)) {
 
 
-    $userObj = new User();
+    $userObj = new user();
 
 // get recipientUsername from username on top of messages box
     $dom = new DOMDocument();
@@ -126,7 +126,7 @@ if(isset($username)) {
                                         id="time-last-sent-label">XX:XX PM</span></h3>
                         </div>
                         <div class="panel-body panel-chat-body">
-                            <div id="msg-sent-date">xx:xx</div>
+                            <div class="msg-detail"><span id="msg-date">XX/XX/XXXX</span>&nbsp-&nbsp;<span id="msg-expire">XX:XX:XX</span></div>
                             <div class="chat-bubble chat-sender">Hello there test</div>
                             <div class="chat-bubble chat-self">Hey!</div>
                         </div>
