@@ -5,7 +5,6 @@
  * Date: 11/23/2018
  * Time: 5:13 PM
  */
-session_start();
 include "config.php";
 
 class user {

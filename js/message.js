@@ -90,7 +90,7 @@ function initLocalCountdownDelete(duration, mExpireElement, mDateElement, cBubbl
         minutes = parseInt(timer / 60, 10);
         seconds = parseInt(timer % 60, 10);
 
-        if(minutess < 10) {
+        if(minutes < 10) {
             minutes = "0" + minutes;
         } else if(seconds < 10) {
             seconds = "0" + seconds;
