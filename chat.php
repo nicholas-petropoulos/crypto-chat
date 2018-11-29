@@ -15,6 +15,14 @@ $user = new User();
 <html>
 
 <head>
+<script> function effect() {
+    var x = document.getElementsByClassName("col-xs-8");
+    for (var i = 0; i < x.length; i++) {x[i].style.display="none";}
+   }
+function callback() {
+    setTimeout(function(){$("#effect").removeAttr("style").hide().fadeIn();}, 1000);
+}
+</script>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>CryptoChat</title>
@@ -25,6 +33,7 @@ $user = new User();
 </head>
 
 <body>
+<!--echo '<script type="text/javascript">effect();</script>';-->
 <div class="container container-top">
     <nav class="navbar navbar-inverse">
         <div class="container-fluid">
@@ -80,13 +89,16 @@ $user = new User();
                     </div>
                 </div>
             </div>
-
+<button onclick="callback()">Back</button>
             <div class="col-xs-8">
                 <div class="panel panel-default panel-chat">
                     <div class="panel-heading panel-chat-heading">
+                    <button onclick="effect()">Button</button>
 
-                        <h3 class="panel-title panel-chat-title"><i class="glyphicon glyphicon-arrow-left "></i>&nbsp;&nbsp;
+                        <h3 class="panel-title panel-chat-title">&nbsp;&nbsp;
                             username | XX:XX last msg sent</h3>
+
+                        
                     </div>
                     <div class="panel-body panel-chat-body">
                         <div class="chat-bubble chat-sender">Hello there test</div>
