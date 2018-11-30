@@ -22,7 +22,7 @@ $(document).ready(function () {
         }
     });
     const messageCheck = setInterval(function () {
-        getUserMessages("npet")
+        getUserMessages($("#username-label").text());
     }, 10000);
 
 });
@@ -37,13 +37,16 @@ function addMessage(party) {
     let msgText = msgField.val().replace(/^[ ]+|[ ]+$/g, '');
     // check if not empty
     if (msgText) {
+        var doesMessageExpire;
         // dropdown converted to seconds for easier manipulation
         const dropdownTimeSeconds = getMessageExpireTime();
         // add the chat bubble to chat window, -1 because the countdown should only begin with the recipient gets message
         if(dropdownTimeSeconds === -1) {
             addChatBubble(msgText, party, getTime(), -1);
+            doesMessageExpire = false;
         } else {
-
+            addChatBubble(msgText, party, getTime(), dropdownTimeSeconds);
+            doesMessageExpire = true;
         }
 
         // parameter if executed by server or not, isAuto = true for server so we do not do this
@@ -54,12 +57,12 @@ function addMessage(party) {
 
         // search page for recipient getting from
         // implement
-        const recipientUsername = $(".username-label").val();
+        const recipientUsername = $("#username-label").text();
         // retrieve key
         const encryptedMessage = getKeyAndEncrypt("public_key", recipientUsername, "");
 
-        // send message off
-        sendMessageDB(encryptedMessage, dropdownTimeSeconds);
+        // send message off // TODO change to encrypted later for sendMEssageDB
+        sendMessageDB(msgText, recipientUsername, dropdownTimeSeconds, doesMessageExpire);
         // generate link
         if ($("#generate-link-checkbox").checked === true) {
             // do stuff
@@ -172,35 +175,27 @@ function encryptMessage(key, text) {
 
 /**
  *
- * @param messageText
- * @param date
+ * @param message
+ * @param recipient
+ * @param seconds
+ * @param doesExpire - string true or false
  */
-function sendMessageDB(messageText, date, doesExpire) {
-    var timeNow = Date.now();
-    // TODO: account for different timezones
-    //const timeExpire = new Date(timeNow.getTime()+diff);
+function sendMessageDB(message, recipient, seconds, doesExpire) {
     $.ajax({
         method: "POST",
         url: "includes/request.php",
         data: {
             option: "sendmessage",
-            messageContent: messageText,
-            expire: doesExpire,
-            expireSeconds: date, //SECONDS
-            recipientSeen: false
+            messageText: message,
+            reqUser: recipient, // user to send to
+            expires: doesExpire, // expires
+            timeExpire: seconds //SECONDS
         },
         async: false
-    }).done(function (e) {
-
     });
 }
 
-/**
- * Sends request to DB once user reads message
- */
-function sendReadMessageFieldDB() {
 
-}
 /**
  * Gets all available messages for current open message window
  * @param user

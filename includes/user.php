@@ -72,6 +72,19 @@ class user {
         return "";
     }
 
+    function addMessage($timeExpire, $senderUsername, $recipientUsername, $messageText, $expires) {
+        global $con;
+        if($sql = $con->prepare("INSERT INTO messages (time_expire, sender_username, recipient_username, message_text, expires) VALUES(?, ?, ?, ?, ?)")) {
+            // if statement only if parameters bind succesful
+            if ($sql->bind_param("sssss", $timeExpire, $senderUsername, $recipientUsername, $messageText, $expires)) {
+                $sql->execute();
+                $sql->close();
+            } else {
+                echo "Unable to process message";
+            }
+        }
+    }
+
     function deleteMessage($messageID) {
 
     }
