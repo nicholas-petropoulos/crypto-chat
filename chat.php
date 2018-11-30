@@ -163,6 +163,7 @@ if(isset($username)) {
             integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
             crossorigin="anonymous"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/moment.js"></script>
     <script src="js/message.js"></script>
     <script src="js/autosize.js"></script>
     <script>

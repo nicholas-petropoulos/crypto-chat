@@ -43,6 +43,9 @@ class user {
             $result = $sql->get_result();
             $messages = [];
             if ($result->num_rows > 0) {
+                // MESSAGE READ FIELD = NULL
+                // IF NULL && MSG EXPIRES, THEN GET TIMESTAMP AND STORE
+                // if MESSAGE GETTING IS EXPIRED, DELETE
                 while($row = $result->fetch_assoc()) {
                     $messageText = $row["message_text"];
                     // TODO: DECRYPT
@@ -66,8 +69,17 @@ class user {
             }
             return $messages;
         }
+        return "";
+    }
+
+    function deleteMessage($messageID) {
 
     }
+
+    function isMessageExpired($messageID) {
+
+    }
+
     function setRecipient($recipient) {
         $this->recipient = $recipient;
     }
