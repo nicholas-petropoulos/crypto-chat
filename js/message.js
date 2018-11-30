@@ -21,6 +21,7 @@ $(document).ready(function () {
             addMessage("self");
         }
     });
+    // check for new messages every 10 seconds
     const messageCheck = setInterval(function () {
         getUserMessages($("#username-label").text());
     }, 10000);
@@ -42,10 +43,10 @@ function addMessage(party) {
         const dropdownTimeSeconds = getMessageExpireTime();
         // add the chat bubble to chat window, -1 because the countdown should only begin with the recipient gets message
         if(dropdownTimeSeconds === -1) {
-            addChatBubble(msgText, party, getTime(), -1);
+            addChatBubble(0, msgText, party, getTime(), -1);
             doesMessageExpire = false;
         } else {
-            addChatBubble(msgText, party, getTime(), dropdownTimeSeconds);
+            addChatBubble(0, msgText, party, getTime(), dropdownTimeSeconds);
             doesMessageExpire = true;
         }
 
@@ -71,32 +72,39 @@ function addMessage(party) {
     }
 }
 
-function addChatBubble(msgText, party, msgDate, msgTimeExpire) {
+function addChatBubble(msgID, msgText, party, msgDate, msgTimeExpire) {
+    // if parameter specified a message ID, that means that me message was retrieved from the server, if = 0 then we sent it locally
+    //  to add the element to the page with that unique ID so it does not get added again when the page updates messages
+    if(msgID === 0) {
+        msgID = msgCounter;
+    }
+    // if chat bubble does not exist, create it
+    if($('#chat-bubble-' + msgID).length === 0) {
+        // info element that holds  date and time to expire
+        $('<div class="msg-detail" id="msg-detail-' + msgID + '"></div>').appendTo(".panel-chat-body");
+        // date element appended to info element
+        $('<span id="msg-date-' + msgID + '">' + msgDate + '</span>').appendTo("#msg-detail-" + msgID);
+        // expire element appended to info element
+        $('<span id="msg-expire-' + msgID + '"></span>').appendTo("#msg-detail-" + msgID);
+        $('<div id="chat-bubble-' + msgID + '" class="chat-bubble chat-' + party + '">' + msgText + '</div>').appendTo(".panel-chat-body");
+        // clear input
+        msgField.val("");
+        // auto scroll down when new messages added
+        $(".panel-chat-body").animate({scrollTop: $(document).height()}, 50);
+        // increment counter
+        if(msgTimeExpire > 0) {
+            const msgExpireElement = $("#msg-expire-" + msgID);
+            const msgDateElement = $("#msg-date-"+ msgID);
+            const chatBubble = $("#chat-bubble-" + msgID);
+            // this begins countdown and deletes elements
+            initLocalCountdownDelete(msgTimeExpire, msgExpireElement, msgDateElement, chatBubble);
+            // message does not expire
+        } else if(msgTimeExpire === 0) {
 
-    // info element that holds  date and time to expire
-    $('<div class="msg-detail" id="msg-detail-' + msgCounter + '"></div>').appendTo(".panel-chat-body");
-    // date element appended to info element
-    $('<span id="msg-date-' + msgCounter + '">' + msgDate + '</span>').appendTo("#msg-detail-" + msgCounter);
-    // expire element appented to info element
-    $('<span id="msg-expire-' + msgCounter + '"></span>').appendTo("#msg-detail-" + msgCounter);
-    $('<div id="chat-bubble-' + msgCounter + '" class="chat-bubble chat-' + party + '">' + msgText + '</div>').appendTo(".panel-chat-body");
-    // clear input
-    msgField.val("");
-    // auto scroll down when new messages added
-    $(".panel-chat-body").animate({scrollTop: $(document).height()}, 50);
-    // increment coutner
-    if(msgTimeExpire > 0) {
-        const msgExpireElement = $("#msg-expire-" + msgCounter);
-        const msgDateElement = $("#msg-date-"+ msgCounter);
-        const chatBubble = $("#chat-bubble-" + msgCounter);
-        // this begins countdown and deletes elements
-        initLocalCountdownDelete(msgTimeExpire, msgExpireElement, msgDateElement, chatBubble);
-    // message does not expire
-    } else if(msgTimeExpire === 0) {
+            // message is waiting on recipient to open  before countdown starts
+        } else if(msgTimeExpire === -1) {
 
-    // message is waiting on recipient to open  before countdown starts
-    } else if(msgTimeExpire === -1) {
-
+        }
     }
     msgCounter++;
 }
@@ -210,18 +218,22 @@ function getUserMessages(user) {
         },
         async: false
     }).done(function (data) {
-        for(var i=0; i < data.length; i++) {
-            var msgText = data[i].msg_text;
-            var party = data[i].recipient_user;
-            var messageDate = data[i].msg_date;
-            var messageExpire = data[i].time_expire;
-            // to determine if it is send or received messages
+        //var messages = [];
+        for(let i=0; i < data.length; i++) {
+            const msgID = data[i].msg_id;
+            const msgText = data[i].msg_text;
+            const party = data[i].recipient_user;
+            const msgDate = data[i].msg_date;
+            const msgExpire = data[i].time_expire;
+           // messages.push([msgID, msgText, party, msgDate, msgExpire]);
             if(party !== user) {
-                addChatBubble(msgText, "sender",messageDate, messageExpire);
+                addChatBubble(msgID, msgText, "sender", msgDate, msgExpire);
             } else {
-                addChatBubble(msgText, "self", messageDate, messageExpire);
+                addChatBubble(msgID, msgText, "self", msgDate, msgExpire);
             }
         }
+        // to determine if it is send or received messages
+
 
     });
 }

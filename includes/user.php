@@ -36,7 +36,7 @@ class user {
     function getUserMessages($username, $recUsername) {
         global $con;
         // messages ordered oldest to newest (top to bottom) and users grouped together
-        $sql = $con->prepare("SELECT * FROM messages WHERE sender_username=? ORDER BY TIMESTAMP(message_date) DESC, recipient_username ASC");
+        $sql = $con->prepare("SELECT * FROM messages WHERE sender_username=? ORDER BY message_id ASC, recipient_username ASC");
         if ($sql) {
             $sql->bind_param("s", $username);
             $sql->execute();
@@ -47,6 +47,7 @@ class user {
                 // IF NULL && MSG EXPIRES, THEN GET TIMESTAMP AND STORE
                 // if MESSAGE GETTING IS EXPIRED, DELETE
                 while($row = $result->fetch_assoc()) {
+                    $messageID = $row["message_id"];
                     $messageText = $row["message_text"];
                     // TODO: DECRYPT
                     $messageDate = $row["message_date"];
@@ -56,16 +57,13 @@ class user {
                     $recipientUsername = $row["recipient_username"];
                     // if a recipient username is passed through, filter and return only those messages OR no filter added
                     if(($recipientUsername != "" && ($recUsername == $recipientUsername)) || $recipientUsername == "") {
-                        $messages[] = ["recipient_user" => $recipientUsername, "msg_text" => $messageText, "msg_date" => $messageDate, "time_expire" => $timeExpire];
+                        $messages[] = ["msg_id" => $messageID, "recipient_user" => $recipientUsername, "msg_text" => $messageText, "msg_date" => $messageDate, "time_expire" => $timeExpire];
                     // return all messages if no filter added
                     } /*else if($recipientUsername == "") {
                         $messages[] = ["rec_user" => $recipientUsername, "msg_text" => $messageText, "msg_date" => $messageDate, "time_expire" => $timeExpire];
                     }*/
 
                 }
-
-                    //echo "Message text: ". $messageText . " - Expire: " . $timeExpire . " - Rec: " . $recipientUsername;
-                    // add to array - possibly 2d array
             }
             return $messages;
         }
