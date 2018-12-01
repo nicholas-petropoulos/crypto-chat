@@ -19,34 +19,50 @@ $option = trim($_REQUEST["option"]);
 // user object
 $userObj = new user();
 
+// TODO: IMPLEMENT AUTHKEY??
+//$authKey = $_REQUEST["authKey"];
+
 // Potential options
 // add message to database
+// TODO: Sanitize Input more
 if($option == "sendmessage") {
-    $tme = new DateTimeZone(DateTimeZone::AMERICA);
+    $messageText = $_REQUEST["messageText"];
+    // 1 = true, 0 = false
+    $expires = $_REQUEST["expires"];
+    // seconds message is alive
+    $timeExpire = $_REQUEST["timeExpire"];
+    // user to send message
+    $reqUser = $_REQUEST["reqUser"];
+    if($expires == "true") {
+        $expires = 1;
+    } else {
+        $expires = 0;
+    }
+    $userObj->addMessage($timeExpire, $username, $reqUser, $messageText, $expires);
 
-    $timeNow = date("Y-m-d H:i:s");
-    $time = new DateTime($timeNow);
 // to encrypt and send message
 } else if($option == "reqkey") {
     if($_REQUEST["type"] == "public_key") {
         $reqUser = $_REQUEST["reqUser"];
         echo $userObj->getKey("public_key", $reqUser);
     }
+// need to send update that message has been read
 } else if($option == "getmessages") {
     header('Content-type: application/json');
+    // requested user messages
     $reqUser = $_REQUEST["reqUser"];
     $messages = array_values($userObj->getUserMessages($username, $reqUser));
-   /* foreach($messages as $msg) {
-        echo json_encode($msg);
-    }*/
     echo json_encode($messages);
-    //echo json_encode($messages);
-    //echo json_encode($messages, true);
-    //echo "hello";
-} else if($option == "newchat") {
-
-} else if($option == "countdowndel") {
-
+} else if($option == "updatemessage") {
+    // check if user session matches request user
+    $msgID = $_REQUEST["msg_ID"];
+    $msgRead = $_REQUEST["msg_read"];
+    if($username == $_REQUEST["username"]) {
+        echo "Username match";
+        $userObj->updateMessage($msgID, $msgRead);
+    } else {
+        echo "Username no match";
+    }
 }
 // SEND MESSAGE
 // GET USER CHATS (from left menu)
