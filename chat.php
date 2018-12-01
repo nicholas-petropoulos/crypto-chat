@@ -141,7 +141,8 @@ if (isset($username)) {
             crossorigin="anonymous"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/moment.js"></script>
-    <script src="js/message.js"></script>
+    <script src="js/jsencrypt.min.js"></script>
+    <script src="js/cryptochat.js"></script>
     <script src="js/autosize.js"></script>
     </body>
     <footer>

@@ -27,7 +27,6 @@ textarea {
 }
 
 .chat-bubble {
-    overflow: hidden !important;
     display:flex !important;
 }
 
@@ -41,7 +40,6 @@ textarea {
         color: #fff;
         border-radius: 24px;
         word-wrap: break-word;
-        overflow:hidden;
     }
 }
 /* Phone */
