@@ -77,11 +77,11 @@ function addMessage(party) {
         largestMsgID++;
         // -1 means the message never deletes
         if(dropdownTimeSeconds === -1) {
-            addChatBubble(largestMsgID, msgText, party, getTime(), -1, false);
+            addChatBubble(largestMsgID, msgText, party, getTime(false), -1, false);
             doesMessageExpire = false;
         // add the chat bubble to chat window, 0 because the countdown should only begin with the recipient gets message
         } else {
-            addChatBubble(largestMsgID, msgText, party, getTime(), 0, false);
+            addChatBubble(largestMsgID, msgText, party, getTime(false), 0, false);
             doesMessageExpire = true;
         }
 
@@ -203,7 +203,7 @@ function sendMessageDB(message, recipient, seconds, doesExpire) {
 
 /**
  * Gets all available messages for current open message window
- * @param user
+ * @param user - USER IS THE ONE WHO LOGGED IN IS HAVING CONVERSATION WITH
  */
 function getUserMessages(user) {
     $.ajax({
@@ -219,39 +219,42 @@ function getUserMessages(user) {
         for(let i=0; i < data.length; i++) {
             const msgID = data[i].msg_id;
             const msgText = data[i].msg_text;
-            const party = data[i].recipient_user;
+            const recipient = data[i].recipient_user;
             const msgDate = data[i].msg_sent_date;
             const msgExpire = data[i].time_expire;
             const doesMsgExpire = data[i].expires;
            // const timeExpire = data[i].time_expire;
             const isMsgRead =  data[i].is_msg_read;
-            //const msgReadDate = data[i].msg_read_date;
-           // this is on the recipent's side (left)
-            if(party !== user) {
+            const msgReadDate = data[i].msg_read_date;
+           // these are messages LOGGED in user sent
+            if(recipient === user) {
                 // if doesMsgExpire = 1, then begin countdown based on time expire
                 if(doesMsgExpire === 1 && isMsgRead === 0) {
-                    // send update to server now
-                    // message had been read - message deleting handled by backend
-                    updateMessage(msgID, 1, party);
-                    console.log("UPDATING MESSAGE");
-                    addChatBubble(msgID, msgText, "sender", msgDate, msgExpire, true);
+                    addChatBubble(msgID, msgText, "self", msgDate, msgExpire, false);
                 // the timer will need to continue from whatever point the message expires if the user leads the page
                 } else if(isMsgRead === "1") {
                     // TODO: GET TIME DIFFERENCE TO CONTINUE TIMER
                 } else {
                     // messageOpened = false because message won't expire
-                    addChatBubble(msgID, msgText, "sender", msgDate, -1, false);
+                    addChatBubble(msgID, msgText, "self", msgDate, -1, false);
                 }
             // this is on the sender's site - we do not update message because it only occurs when a recipient opens a message
             } else {
                 if(doesMsgExpire === 1 && isMsgRead === 0) {
-                    // 0 = message is unopened
-                    addChatBubble(msgID, msgText, "sender", msgDate, msgExpire, 0, false);
-                } else if(isMsgRead === "1") {
+                    // send update to server now
+                    // message had been read - message deleting handled by backend
+                    updateMessage(msgID, 1, recipient);
+                    // message will start counting down on user's side
+                    addChatBubble(msgID, msgText, "sender", msgDate, msgExpire, true);
+                } else if(isMsgRead === 1) {
                     // TODO: GET TIME DIFFERENCE TO CONTINUE TIMER
+                    // get timestamp
+                    // get message read date + expire time, get difference which = time remaining
+                    const timestamp = getTime(true);
+                    
                 } else {
                     // OWN messages do not expire on client's side
-                    addChatBubble(msgID, msgText, "self", msgDate, msgExpire);
+                    addChatBubble(msgID, msgText, "sender", msgDate, 0, false);
                 }
             }
         }
@@ -286,9 +289,11 @@ function displayUsernameInput() {
     const usernameArea = $("#username-input-area");
     usernameLabel.hide();
     // only append username field if not already displayed
-    if($("#username-field").length === 0) {
+    const usernameField = $("#username-field");
+    if(usernameField.length === 0) {
         $('<input id="username-field" type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">').appendTo(usernameArea);
     }
+    usernameField.focus();
 }
 
 // keytype can = public_key or private_key
@@ -364,12 +369,15 @@ function getMessageExpireTime() {
  * Returns user's local time to display on messages
  * @returns {*|string}
  */
-function getTime() {
+function getTime(asTimestamp) {
     // get UTC
     const timeUTC = moment.utc().format();
     // convert to time
     const timeLocal = moment.utc(timeUTC).local().format();
     // format time
+    if(asTimestamp) {
+        return moment().unix();
+    }
     return moment(timeLocal).local().format('YYYY-MM-DD HH:mm:ss');
 }
 
