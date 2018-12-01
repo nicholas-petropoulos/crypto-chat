@@ -8,8 +8,7 @@
 session_start();
 include "includes/user.php";
 $username = $_SESSION["username"];
-if(isset($username)) {
-
+if (isset($username)) {
 
 
 // change getUserMessages to logged in user - currently testing
@@ -90,19 +89,19 @@ if(isset($username)) {
                         <div class="panel-heading panel-chat-heading">
                             <span id="new-chat"> <a href="#">New Chat
                                 <i class="glyphicon glyphicon-plus"></i></a></span>
-                                &nbsp;&nbsp;
-                                <span id="username-input-area"><span id="username-label">npetro</span>
+                            &nbsp;&nbsp;
+                            <span id="username-input-area"><span id="username-label">A</span>
 
-  <input id="username-field" type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+
 </span>
-                                </span>
+                            </span>
 
-                                <!--<i class="glyphicon glyphicon-arrow-left ">-->
+                            <!--<i class="glyphicon glyphicon-arrow-left ">-->
 
 
                         </div>
                         <div class="panel-body panel-chat-body">
-                            <div class="msg-detail">Your messages will show up here</div>
+                            <div class="msg-detail">Your messages will show up here - start a new chat above</div>
                             <br>
                             <!--<div class="msg-detail"><span id="msg-date">XX/XX/XXXX</span>&nbsp-&nbsp;<span id="msg-expire">XX:XX:XX</span></div>-->
                             <!--<div class="chat-bubble chat-sender">Hello there test</div>-->
@@ -163,8 +162,8 @@ if(isset($username)) {
     </footer>
 
     </html>
-<?php
-    } else {
-        header("Location: login.php");
-    }
+    <?php
+} else {
+    header("Location: login.php");
+}
 ?>

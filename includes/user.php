@@ -59,7 +59,12 @@ class user {
                     // has the message been read?
                     $isMessageRead = $row["message_read"];
                     $messageReadDate = $row["message_read_date"];
-                    // TODO: Delete message  if $messageReadDate >= $currDate then delete
+                    // we do not want to return message to user that should be deleted
+                    if(($messageReadDate != null)) {
+                        $dateFormat =
+                        // TODO: Delete message  if $messageReadDate >= $currDate then delete
+                    }
+
                     //$timestamp = strtotime();
                     $recipientUsername = $row["recipient_username"];
                     // if a recipient username is passed through, filter and return only those messages OR no filter added
@@ -113,6 +118,8 @@ class user {
             } else {
                 echo "Unable to update message";
             }
+        } else {
+            echo "Unable to update message";
         }
     }
 

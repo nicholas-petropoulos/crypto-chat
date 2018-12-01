@@ -54,7 +54,15 @@ if($option == "sendmessage") {
     $messages = array_values($userObj->getUserMessages($username, $reqUser));
     echo json_encode($messages);
 } else if($option == "updatemessage") {
-
+    // check if user session matches request user
+    $msgID = $_REQUEST["msg_ID"];
+    $msgRead = $_REQUEST["msg_read"];
+    if($username == $_REQUEST["username"]) {
+        echo "Username match";
+        $userObj->updateMessage($msgID, $msgRead);
+    } else {
+        echo "Username no match";
+    }
 }
 // SEND MESSAGE
 // GET USER CHATS (from left menu)
