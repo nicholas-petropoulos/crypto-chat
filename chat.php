@@ -11,39 +11,6 @@ $username = $_SESSION["username"];
 if(isset($username)) {
 
 
-    $userObj = new user();
-
-// get recipientUsername from username on top of messages box
-    $dom = new DOMDocument();
-    $recipientUsername = $dom->getElementById("username-label");
-    if (isset($recipientUsername)) {
-        foreach ($recipientUsername->attributes as $attr) {
-            $nodeVal = $attr->nodeValue;
-            echo $nodeVal;
-        }
-    } else {
-        echo "Not set";
-    }
-
-    echo "Rec: $recipientUsername";
-
-
-    $messages = $userObj->getUserMessages("npetro", "");
-    foreach ($messages as $msg) {
-        // $msg[0] == recipient_username, $msg[1] == msgText
-        if ($msg[0] == $recipientUsername) {
-            if ($msg[1] == $username) {
-                $msgParty = "sender";
-            } else {
-                $msgParty = "recipient";
-            }
-            echo '<script>addChatBubble(' . $msg[1] . ', ' . $msgParty . ')</script>';
-            echo "test";
-        } else {
-            echo "fail";
-        }
-    }
-
 
 // change getUserMessages to logged in user - currently testing
     ?>
@@ -95,8 +62,8 @@ if(isset($username)) {
             <div class="row chat-row">
                 <div class="col-xs-12">
                 </div>
-                <div class="col-xs-4">
-                    <div class="visible-md hidden-xs">test</div>
+                <!--
+                <div class="col-xs-4 hidden-md hidden-xs hidden-s">
                     <div class="panel panel-default panel-conv">
                         <div class="panel-heading">
                             <a href="#">New Chat
@@ -116,19 +83,30 @@ if(isset($username)) {
                             <p>Last message</p>
                         </div>
                     </div>
-                </div>
+                </div>-->
 
-                <div class="col-xs-8">
+                <div class="col-xs-12">
                     <div class="panel panel-default panel-chat">
                         <div class="panel-heading panel-chat-heading">
-                            <h3 class="panel-title panel-chat-title"><i class="glyphicon glyphicon-arrow-left "></i>&nbsp;&nbsp;
-                                <span id="username-label">npetro</span> | <span
-                                        id="time-last-sent-label">XX:XX PM</span></h3>
+                            <span id="new-chat"> <a href="#">New Chat
+                                <i class="glyphicon glyphicon-plus"></i></a></span>
+                                &nbsp;&nbsp;
+                                <span id="username-input-area"><span id="username-label">npetro</span>
+
+  <input id="username-field" type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+</span>
+                                </span>
+
+                                <!--<i class="glyphicon glyphicon-arrow-left ">-->
+
+
                         </div>
                         <div class="panel-body panel-chat-body">
-                            <div class="msg-detail"><span id="msg-date">XX/XX/XXXX</span>&nbsp-&nbsp;<span id="msg-expire">XX:XX:XX</span></div>
-                            <div class="chat-bubble chat-sender">Hello there test</div>
-                            <div class="chat-bubble chat-self">Hey!</div>
+                            <div class="msg-detail">Your messages will show up here</div>
+                            <br>
+                            <!--<div class="msg-detail"><span id="msg-date">XX/XX/XXXX</span>&nbsp-&nbsp;<span id="msg-expire">XX:XX:XX</span></div>-->
+                            <!--<div class="chat-bubble chat-sender">Hello there test</div>-->
+                            <!--<div class="chat-bubble chat-self">Hey!</div>-->
                         </div>
                     </div>
 
@@ -166,14 +144,6 @@ if(isset($username)) {
     <script src="js/moment.js"></script>
     <script src="js/message.js"></script>
     <script src="js/autosize.js"></script>
-    <script>
-        $(document).ready(function(e) {
-            // add listener to see if text updates
-            var recipientUser = $("#username-label").text();
-            var messages = getUserMessages(recipientUser);
-        });
-
-    </script>
     </body>
     <footer>
         <div class="container">
