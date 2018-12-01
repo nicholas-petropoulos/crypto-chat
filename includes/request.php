@@ -53,9 +53,7 @@ if($option == "sendmessage") {
     $reqUser = $_REQUEST["reqUser"];
     $messages = array_values($userObj->getUserMessages($username, $reqUser));
     echo json_encode($messages);
-} else if($option == "newchat") {
-
-} else if($option == "countdowndel") {
+} else if($option == "updatemessage") {
 
 }
 // SEND MESSAGE

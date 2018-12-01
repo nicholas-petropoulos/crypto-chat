@@ -90,7 +90,8 @@ textarea {
 }
 
 .panel-chat {
-    margin-left: -25px !important;
+    /*margin-left: -25px !important;*/
+   // align-content: right;
 
 }
 
@@ -106,11 +107,11 @@ textarea {
     border-radius: 5px;
     margin-right: 2px;
 }
-
+/*
 .chat-input-group {
     margin-top: -15px;
     margin-left: -25px;
-}
+}*/
 
 .input-group-addon-msgtimer {
     width: 200px;
@@ -126,5 +127,7 @@ textarea {
     text-decoration: none !important;
 }
 
-
+#username-field {
+    width: 15%;
+}
 /* 2e2e2e */
