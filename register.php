@@ -8,8 +8,10 @@
 
 include "includes/config.php";
 include "includes/functions.php";
+include "includes/user.php";
+
 // Registration variables
-$username = $email = $password = $confirmPassword = $passwordHashed = $securityPIN = "";
+$username = $email = $password = $confirmPassword = $passwordHashed = $securityPIN = $publicKey = $privateKey = "";
 
 // Reg Error variables
 $usernameError = $emailError = $passwordError = $confirmPasswordError = $passwordMatchError = $securityPINError = $keyGenMsg = "";
@@ -21,6 +23,7 @@ $usernameError = $emailError = $passwordError = $confirmPasswordError = $passwor
  *  Password
  *  PIN
  */
+$userObj = new user();
 
 if (isset($_POST["btn-submit"])) {
     // returns an error if unsuccessful, otherwise returns empty string
@@ -57,40 +60,35 @@ if (isset($_POST["btn-submit"])) {
         $passwordHashed = password_hash($password, PASSWORD_BCRYPT);
     }
     if (trim($_POST['security-pin'] == "")) {
-        $confirmPasswordError = "No security PIN entered, this is required for secure messaging to work!";
+        $securityPINError = "No security PIN entered, this is required for secure messaging to work!";
     } else {
-        $confirmPassword = trim($_POST["security-pin"]);
+        $securityPIN = trim($_POST["security-pin"]);
     }
 
-
     // If all fields above return no errors (strings are blank)
-    if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "") {
-        // key config
-        // enable extension - extension=openssl in php.ini
-        $config = array(
-            "digest_alg" => "sha512",
-            "private_key_bits" => 4096,
-            "private_key_type" => OPENSSL_KEYTYPE_RSA,
-            "config" => $openSSLConfigPath
-        );
+    if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "" && $securityPINError == "") {
+
         // generate public and private key
         if($key = openssl_pkey_new($config)) {
-            // Extract private key from $key to $privKey
-            openssl_pkey_export($key, $privateKey, $securityPIN, $config);
-
+            // use unencrypted version and store in user's session
+            openssl_pkey_export($key, $privateKey, null, $config);
+            // Extract private key from $key to $privKey - use pin to encrypt key in DB
+            openssl_pkey_export($key, $privateKeyEncrypted, $securityPIN, $config);
             // Extract the public key from $key to $pubKey
             $publicKey = openssl_pkey_get_details($key);
             $publicKey = $publicKey["key"];
         }
         if($sql = $con->prepare("INSERT INTO users (username, email, password, public_key, private_key) VALUES(?, ?, ?, ?, ?)")) {
             // if statement only if parameters bind succesful
-            if ($sql->bind_param("sssss", $username, $email, $passwordHashed, $publicKey, $privateKey)) {
+            if ($sql->bind_param("sssss", $username, $email, $passwordHashed, $publicKey, $privateKeyEncrypted)) {
                 $sql->execute();
                 $sql->close();
                 openssl_pkey_free($key);
                 // set username as if was logging in
                 session_start();
                 $_SESSION['username'] = $username;
+                $token = md5(uniqid());
+                $_SESSION["_token"] = $token;
                 header("Location: chat.php");
             } else {
                 echo "Error creating user, contact administrator";
@@ -216,7 +214,20 @@ $title = "CryptoChat Registration";
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
 <script src="js/bootstrap.min.js"></script>
-<script src="js/register.js"></script>
+<script>
+    // session storage
+    // keys stored in format private_key_un where un is user for one's own private key or a username for someone else's public key
+    var privateKey = "";
+    var publicKey = "";
+    privateKey = <?php if($privateKeyEncrypted !== "" && $privateKeyEncrypted != false) { echo $privateKeyEncrypted; } ?>;
+    publicKey = <?php if($publicKey !== "") { echo $publicKey; } ?>;
+    if(privateKey !== "") {
+        sessionStorage.setItem("private_key_user", privateKey);
+    }
+    if(publicKey !== "") {
+        sessionStorage.setItem("public_key_user", publicKey);
+    }
+</script>
 </body>
 <footer>
     <div class="container">
@@ -233,10 +244,6 @@ $title = "CryptoChat Registration";
             </li>
         </ul>
     </div>
-
-    <script>
-
-    </script>
 </footer>
 
 </html>
