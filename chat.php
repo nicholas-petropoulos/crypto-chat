@@ -90,7 +90,7 @@ if (isset($username)) {
                             <span id="new-chat"> <a href="#">New Chat
                                 <i class="glyphicon glyphicon-plus"></i></a></span>
                             &nbsp;&nbsp;
-                            <span id="username-input-area"><span id="username-label">A</span>
+                            <span id="username-input-area"><span id="username-label"></span>
 
 
 </span>
@@ -101,7 +101,7 @@ if (isset($username)) {
 
                         </div>
                         <div class="panel-body panel-chat-body">
-                            <div class="msg-detail">Your messages will show up here - start a new chat above</div>
+                            <div class="msg-detail">Your messages will show up here - start a new conversation above by clicking "New Chat"</div>
                             <br>
                             <!--<div class="msg-detail"><span id="msg-date">XX/XX/XXXX</span>&nbsp-&nbsp;<span id="msg-expire">XX:XX:XX</span></div>-->
                             <!--<div class="chat-bubble chat-sender">Hello there test</div>-->
