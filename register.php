@@ -9,18 +9,19 @@
 include "includes/config.php";
 include "includes/functions.php";
 // Registration variables
-$username = $email = $password = $confirmPassword = $passwordHashed = "";
+$username = $email = $password = $confirmPassword = $passwordHashed = $securityPIN = "";
 
 // Reg Error variables
-$usernameError = $emailError = $passwordError = $confirmPasswordError = $passwordMatchError = $keyGenMsg = "";
+$usernameError = $emailError = $passwordError = $confirmPasswordError = $passwordMatchError = $securityPINError = $keyGenMsg = "";
 
 /**
  * Registration fields
  *  Username
  *  Email
  *  Password
+ *  PIN
  */
-// Submit button pressed
+
 if (isset($_POST["btn-submit"])) {
     // returns an error if unsuccessful, otherwise returns empty string
     // Username and email data, includes 2 index array
@@ -34,7 +35,7 @@ if (isset($_POST["btn-submit"])) {
     $emailError = $emailData[1];
 
     // password checks
-
+    // TODO: enforce password & pin requirements
     if (trim($_POST['password']) == "")
         $passwordError = "No password entered!";
     else {
@@ -55,9 +56,11 @@ if (isset($_POST["btn-submit"])) {
     } else {
         $passwordHashed = password_hash($password, PASSWORD_BCRYPT);
     }
-    // GENERATE PUB/PRIVATE KEY PAIR
-
-    // if no key present, generate both.
+    if (trim($_POST['security-pin'] == "")) {
+        $confirmPasswordError = "No security PIN entered, this is required for secure messaging to work!";
+    } else {
+        $confirmPassword = trim($_POST["security-pin"]);
+    }
 
 
     // If all fields above return no errors (strings are blank)
@@ -73,7 +76,7 @@ if (isset($_POST["btn-submit"])) {
         // generate public and private key
         if($key = openssl_pkey_new($config)) {
             // Extract private key from $key to $privKey
-            openssl_pkey_export($key, $privateKey, NULL, $config);
+            openssl_pkey_export($key, $privateKey, $securityPIN, $config);
 
             // Extract the public key from $key to $pubKey
             $publicKey = openssl_pkey_get_details($key);
@@ -185,6 +188,14 @@ $title = "CryptoChat Registration";
                     <input type="password" class="form-control" name="confirm" id="confirm"
                            placeholder="Enter password again">
                     <p><?php echo $confirmPasswordError ?></p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="confirm">Security PIN</label>
+                <div class="col-sm-9">
+                    <input type="password" class="form-control" name="security-pin" id="security-pin"
+                           placeholder="Enter enter 4-8 digit pin">
+                    <p><?php echo $securityPINError ?></p>
                 </div>
             </div>
             <div class="form-group">
