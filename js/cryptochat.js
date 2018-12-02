@@ -10,10 +10,10 @@ $(document).ready(function () {
     // message updating should pause when sending a message to prevent lag
     //var isMessageCheckPaused = false;
     // get messages
-    getUserMessages(usernameLabel.text());
+    getUserMessages(encodeHTML(usernameLabel.text()));
    // getUserMessages($("#username-label").text()).then(() => {
         setInterval(function () {
-            getUserMessages(usernameLabel.text());
+            getUserMessages(encodeHTML(usernameLabel.text()));
         }, 10000);
  //   });
     //reset msg counter
@@ -49,7 +49,7 @@ $(document).ready(function () {
             // hide
             usernameInputField.remove();
             // get new messages
-            getUserMessages(usernameLabel.text());
+            getUserMessages(encodeHTML(usernameLabel.text()));
         }
     });
 });
@@ -61,7 +61,7 @@ $(document).ready(function () {
  */
 function addMessage(party) {
     // get text and trim whitespace
-    let msgText = msgField.val().replace(/^[ ]+|[ ]+$/g, '');
+    let msgText = encodeHTML(msgField.val().replace(/^[ ]+|[ ]+$/g, ''));
     // check if not empty
     if (msgText) {
         var doesMessageExpire;
@@ -90,8 +90,7 @@ function addMessage(party) {
         // encrypt with recipient's public key
 
         // search page for recipient getting from
-        // implement
-        const recipientUsername = usernameLabel.text();
+        const recipientUsername = encodeHTML(usernameLabel.text());
         // retrieve key
         //const encryptedMessage = getKeyAndEncrypt("public_key", recipientUsername);
         //alert(encryptedMessage);
@@ -105,6 +104,18 @@ function addMessage(party) {
         }
 
     }
+}
+
+/**
+ * Sanitize input - simple xss prevention
+ * @param s
+ * @returns {string}
+ */
+function encodeHTML(s) {
+    //return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(s));
+    return div.innerHTML;
 }
 
 /**
@@ -164,7 +175,6 @@ function clearChatMessages() {
     $('div[id^="msg-detail-"]').each(function(i, value) {
         value.remove();
     });
-
 }
 
 
