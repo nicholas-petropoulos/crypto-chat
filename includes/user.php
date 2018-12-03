@@ -31,6 +31,19 @@ class user {
         }
         return "";
     }
+
+    function getDecryptedPrivateKey($pin, $username) {
+        global $openSSLConfig;
+        $encryptedKey = $this->getKey("private_key", $username);
+        $pkeyTest = openssl_pkey_get_private($encryptedKey, $pin);
+        if($pkeyTest == false){
+            echo "Unable to retrieve key";
+        }
+        // get unencrypted
+        openssl_pkey_export($pkeyTest,$decryptedKey,null, $openSSLConfig);
+        return $decryptedKey;
+    }
+
     // array format - $arr = [[$msg],[$msg],[$msg],[$msg]...]
     // return array [$recipientUsername, $messageText, $messageDate, $timeExpire]
     function getUserMessages($username, $recUsername)

@@ -8,19 +8,26 @@
 
 include "includes/config.php";
 include "includes/functions.php";
+include "includes/user.php";
+
+// session configuration - 24 hours default
+ini_set('session.gc_maxlifetime', 86400);
+
 // Registration variables
-$username = $email = $password = $confirmPassword = $passwordHashed = "";
+$username = $email = $password = $confirmPassword = $passwordHashed = $securityPIN = $publicKey = $privateKey = "";
 
 // Reg Error variables
-$usernameError = $emailError = $passwordError = $confirmPasswordError = $passwordMatchError = $keyGenMsg = "";
+$usernameError = $emailError = $passwordError = $confirmPasswordError = $passwordMatchError = $securityPINError = $keyGenMsg = "";
 
 /**
  * Registration fields
  *  Username
  *  Email
  *  Password
+ *  PIN
  */
-// Submit button pressed
+$userObj = new user();
+
 if (isset($_POST["btn-submit"])) {
     // returns an error if unsuccessful, otherwise returns empty string
     // Username and email data, includes 2 index array
@@ -34,7 +41,7 @@ if (isset($_POST["btn-submit"])) {
     $emailError = $emailData[1];
 
     // password checks
-
+    // TODO: enforce password & pin requirements
     if (trim($_POST['password']) == "")
         $passwordError = "No password entered!";
     else {
@@ -55,39 +62,41 @@ if (isset($_POST["btn-submit"])) {
     } else {
         $passwordHashed = password_hash($password, PASSWORD_BCRYPT);
     }
-    // GENERATE PUB/PRIVATE KEY PAIR
-
-    // if no key present, generate both.
-
+    if (trim($_POST['security-pin'] == "")) {
+        $securityPINError = "No security PIN entered, this is required for secure messaging to work!";
+    } else {
+        $securityPIN = trim($_POST["security-pin"]);
+    }
 
     // If all fields above return no errors (strings are blank)
-    if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "") {
-        // key config
-        // enable extension - extension=openssl in php.ini
-        $config = array(
-            "digest_alg" => "sha512",
-            "private_key_bits" => 4096,
-            "private_key_type" => OPENSSL_KEYTYPE_RSA,
-            "config" => $openSSLConfigPath
-        );
-        // generate public and private key
-        if($key = openssl_pkey_new($config)) {
-            // Extract private key from $key to $privKey
-            openssl_pkey_export($key, $privateKey, NULL, $config);
+    if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "" && $securityPINError == "") {
 
+        // generate public and private key
+        if($key = openssl_pkey_new($openSSLConfig)) {
+            // use unencrypted version and store in user's session
+            openssl_pkey_export($key, $privateKey, null, $openSSLConfig);
+            // Extract private key from $key to $privKey - use pin to encrypt key in DB
+            openssl_pkey_export($key, $privateKeyEncrypted, $securityPIN, $openSSLConfig);
             // Extract the public key from $key to $pubKey
             $publicKey = openssl_pkey_get_details($key);
             $publicKey = $publicKey["key"];
         }
         if($sql = $con->prepare("INSERT INTO users (username, email, password, public_key, private_key) VALUES(?, ?, ?, ?, ?)")) {
             // if statement only if parameters bind succesful
-            if ($sql->bind_param("sssss", $username, $email, $passwordHashed, $publicKey, $privateKey)) {
+            if ($sql->bind_param("sssss", $username, $email, $passwordHashed, $publicKey, $privateKeyEncrypted)) {
                 $sql->execute();
                 $sql->close();
                 openssl_pkey_free($key);
+                // cookies also last for 24 hours
+                session_set_cookie_params(86400);
+                // add cookies
+                setcookie("username", $username);
+                setcookie("pin", $securityPIN);
                 // set username as if was logging in
                 session_start();
                 $_SESSION['username'] = $username;
+                $token = md5(uniqid());
+                $_SESSION["_token"] = $token;
                 header("Location: chat.php");
             } else {
                 echo "Error creating user, contact administrator";
@@ -188,6 +197,14 @@ $title = "CryptoChat Registration";
                 </div>
             </div>
             <div class="form-group">
+                <label class="control-label col-sm-2" for="confirm">Security PIN</label>
+                <div class="col-sm-9">
+                    <input type="password" class="form-control" name="security-pin" id="security-pin"
+                           placeholder="Enter enter 4-8 digit pin">
+                    <p><?php echo $securityPINError ?></p>
+                </div>
+            </div>
+            <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">
                     <p id="password-error-msg"><?php if (!$passwordMatchError == "") {
                             echo $passwordMatchError;
@@ -205,7 +222,8 @@ $title = "CryptoChat Registration";
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
 <script src="js/bootstrap.min.js"></script>
-<script src="js/register.js"></script>
+<script src="js/autosize.js"></script>
+<script src="js/cryptochat.js"></script>
 </body>
 <footer>
     <div class="container">
@@ -222,10 +240,6 @@ $title = "CryptoChat Registration";
             </li>
         </ul>
     </div>
-
-    <script>
-
-    </script>
 </footer>
 
 </html>

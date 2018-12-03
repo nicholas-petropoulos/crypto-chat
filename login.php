@@ -5,6 +5,10 @@
  * Date: 11/21/2018
  * Time: 7:56 PM
  */
+// sessions last for 24 hours
+ini_set('session.gc_maxlifetime', 86400);
+// cookies also last for 24 hours
+session_set_cookie_params(86400);
 session_start();
 
 if(isset($_SESSION["username"])) {
@@ -12,20 +16,23 @@ if(isset($_SESSION["username"])) {
 }
 
 include "includes/config.php";
+include "includes/user.php";
 
-$username = $password = "";
-$usernameError = $passwordError = "";
-$loginError = "";
+$username = $password = $securityPIN = "";
+$usernameError = $passwordError = $securityPINError = $noSecurityPINError = $loginError = "";
+$publicKey = $privateKey = "";
+
+$userObj = new user();
 
 if(isset($_POST['btn-login'])){
     if(trim($_POST['username'])=="") {
-        $usernameError = "enter username";
+        $usernameError = "No username entered";
     } else {
         $username = strtolower(trim($_POST['username']));
     }
 
     if(trim($_POST['password'])=="")
-        $passwordError = "enter password";
+        $passwordError = "No password entered";
     else {
         // check database for password
         $password = trim($_POST['password']);
@@ -40,10 +47,40 @@ if(isset($_POST['btn-login'])){
             }
         }
     }
+    // get security pin
+    if(trim($_POST['security-pin'])=="") {
+        $noSecurityPINError = "No security PIN entered";
+    } else {
+        $securityPIN = strtolower(trim($_POST['security-pin']));
+    }
 
-    if($usernameError == "" && $passwordError==""){
-        $_SESSION['username'] = $username;
-        header("Location: chat.php");
+    if($usernameError == "" && $passwordError=="" && $noSecurityPINError == ""){
+        // get key from db
+        $encryptedPrivateKey = $userObj->getKey("private_key", $username);
+        // turn off error reporting or we get an error for wrong key
+        //error_reporting(0);
+
+        // returns string or false on failure
+        $pkeyTest = openssl_pkey_get_private($encryptedPrivateKey, $securityPIN);
+        echo "test: ". $pkeyTest;
+        if($pkeyTest == false){
+            $securityPINError = "Incorrect PIN entered.";
+        }
+        // get unencrypted
+        openssl_pkey_export($pkeyTest,$privateKey,null, $openSSLConfig);
+
+        echo "Decrypted private key: " . $privateKey;
+        if($securityPINError == "") {
+            // these values need to be stored in cookies so they can make requests to get keys later
+            setcookie("username", $username);
+            setcookie("pin", $securityPIN);
+            $_SESSION["username"] = $username;
+            // TODO: implement token usage
+            $token = md5(uniqid());
+            $_SESSION["_token"] = $token;
+            echo "Success";
+            header("Location: chat.php");
+        }
     }
 
 }
@@ -112,6 +149,13 @@ if(isset($_POST['btn-login'])){
                 </div>
             </div>
             <div class="form-group">
+                <label class="control-label col-sm-2" for="pwd">Security PIN</label>
+                <div class="col-sm-10">
+                    <input type="password" class="form-control" name="security-pin" id="security-pin" placeholder="Enter security PIN">
+                    <p><?php echo $securityPINError ?></p>
+                </div>
+            </div>
+            <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">
                     <button type="submit" name="btn-login" id="btn-login" class="btn btn-success">Log In</button>
                 </div>
@@ -122,6 +166,8 @@ if(isset($_POST['btn-login'])){
 <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
 <script src="js/bootstrap.min.js"></script>
+<script src="js/autosize.js"></script>
+<script src="js/cryptochat.js"></script>
 </body>
 <footer>
     <div class="container">

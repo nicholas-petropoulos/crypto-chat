@@ -5,6 +5,9 @@
  * Date: 11/21/2018
  * Time: 8:31 PM
  */
+
+// session configuration - 24 hours default
+ini_set('session.gc_maxlifetime', 86400);
 session_start();
 include "includes/user.php";
 $username = $_SESSION["username"];
@@ -27,7 +30,7 @@ if (isset($username)) {
         <link href="css/bootstrap-theme.css" rel="stylesheet"/>
     </head>
 
-    <body>
+    <body class="chat">
     <div class="container container-top">
         <nav class="navbar navbar-inverse">
             <div class="container-fluid">
@@ -83,14 +86,13 @@ if (isset($username)) {
                         </div>
                     </div>
                 </div>-->
-
                 <div class="col-xs-12">
                     <div class="panel panel-default panel-chat">
                         <div class="panel-heading panel-chat-heading">
                             <span id="new-chat"> <a href="#">New Chat
                                 <i class="glyphicon glyphicon-plus"></i></a></span>
                             &nbsp;&nbsp;
-                            <span id="username-input-area"><span id="username-label">A</span>
+                            <span id="username-input-area"><span id="username-label"></span>
 
 
 </span>
@@ -101,7 +103,7 @@ if (isset($username)) {
 
                         </div>
                         <div class="panel-body panel-chat-body">
-                            <div class="msg-detail">Your messages will show up here - start a new chat above</div>
+                            <div class="msg-detail">Your messages will show up here - start a new conversation above by clicking "New Chat"</div>
                             <br>
                             <!--<div class="msg-detail"><span id="msg-date">XX/XX/XXXX</span>&nbsp-&nbsp;<span id="msg-expire">XX:XX:XX</span></div>-->
                             <!--<div class="chat-bubble chat-sender">Hello there test</div>-->
