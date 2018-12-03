@@ -5,6 +5,9 @@
  * Date: 11/21/2018
  * Time: 8:31 PM
  */
+
+// session configuration - 24 hours default
+ini_set('session.gc_maxlifetime', 86400);
 session_start();
 include "includes/user.php";
 $username = $_SESSION["username"];
@@ -27,7 +30,7 @@ if (isset($username)) {
         <link href="css/bootstrap-theme.css" rel="stylesheet"/>
     </head>
 
-    <body>
+    <body class="chat">
     <div class="container container-top">
         <nav class="navbar navbar-inverse">
             <div class="container-fluid">
@@ -83,7 +86,6 @@ if (isset($username)) {
                         </div>
                     </div>
                 </div>-->
-
                 <div class="col-xs-12">
                     <div class="panel panel-default panel-chat">
                         <div class="panel-heading panel-chat-heading">
