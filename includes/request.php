@@ -19,7 +19,7 @@ $option = trim($_REQUEST["option"]);
 // user object
 $userObj = new user();
 
-// TODO: IMPLEMENT AUTHKEY??
+// TODO: IMPLEMENT AUTHKEY
 //$authKey = $_REQUEST["authKey"];
 
 // Potential options
@@ -39,20 +39,30 @@ if($option == "sendmessage") {
         $expires = 0;
     }
     $userObj->addMessage($timeExpire, $username, $reqUser, $messageText, $expires);
-
 // to encrypt and send message
-} else if($option == "reqkey") {
+} else if($option == "getkey") {
     if($_REQUEST["type"] == "public_key") {
         $reqUser = $_REQUEST["reqUser"];
         echo $userObj->getKey("public_key", $reqUser);
+    // Only can request own private key
+    } else if(($_REQUEST["type"] == "private_key") && $_REQUEST["reqUser"] == $username) {
+        $pin = trim($_REQUEST["pin"]);
+        $reqUser = $_REQUEST["reqUser"];
+        echo $userObj->getDecryptedPrivateKey($pin, $reqUser);
     }
 // need to send update that message has been read
 } else if($option == "getmessages") {
     header('Content-type: application/json');
     // requested user messages
     $reqUser = $_REQUEST["reqUser"];
-    $messages = array_values($userObj->getUserMessages($username, $reqUser));
-    echo json_encode($messages);
+    $messages = $userObj->getUserMessages($username, $reqUser);
+    if($messages != null && $messages != "") {
+        $msgArray = array_values($messages);
+        echo json_encode($msgArray);
+    } else {
+        echo "No messages returned";
+    }
+
 } else if($option == "updatemessage") {
     // check if user session matches request user
     $msgID = $_REQUEST["msg_ID"];
