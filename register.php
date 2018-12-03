@@ -10,6 +10,9 @@ include "includes/config.php";
 include "includes/functions.php";
 include "includes/user.php";
 
+// session configuration - 24 hours default
+ini_set('session.gc_maxlifetime', 86400);
+
 // Registration variables
 $username = $email = $password = $confirmPassword = $passwordHashed = $securityPIN = $publicKey = $privateKey = "";
 
@@ -69,11 +72,11 @@ if (isset($_POST["btn-submit"])) {
     if ($usernameError == "" && $passwordError == "" && $confirmPasswordError == "" && $emailError == "" && $passwordMatchError == "" && $securityPINError == "") {
 
         // generate public and private key
-        if($key = openssl_pkey_new($config)) {
+        if($key = openssl_pkey_new($openSSLConfig)) {
             // use unencrypted version and store in user's session
-            openssl_pkey_export($key, $privateKey, null, $config);
+            openssl_pkey_export($key, $privateKey, null, $openSSLConfig);
             // Extract private key from $key to $privKey - use pin to encrypt key in DB
-            openssl_pkey_export($key, $privateKeyEncrypted, $securityPIN, $config);
+            openssl_pkey_export($key, $privateKeyEncrypted, $securityPIN, $openSSLConfig);
             // Extract the public key from $key to $pubKey
             $publicKey = openssl_pkey_get_details($key);
             $publicKey = $publicKey["key"];
@@ -84,6 +87,11 @@ if (isset($_POST["btn-submit"])) {
                 $sql->execute();
                 $sql->close();
                 openssl_pkey_free($key);
+                // cookies also last for 24 hours
+                session_set_cookie_params(86400);
+                // add cookies
+                setcookie("username", $username);
+                setcookie("pin", $securityPIN);
                 // set username as if was logging in
                 session_start();
                 $_SESSION['username'] = $username;
@@ -214,20 +222,8 @@ $title = "CryptoChat Registration";
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
 <script src="js/bootstrap.min.js"></script>
-<script>
-    // session storage
-    // keys stored in format private_key_un where un is user for one's own private key or a username for someone else's public key
-    var privateKey = "";
-    var publicKey = "";
-    privateKey = <?php if($privateKeyEncrypted !== "" && $privateKeyEncrypted != false) { echo $privateKeyEncrypted; } ?>;
-    publicKey = <?php if($publicKey !== "") { echo $publicKey; } ?>;
-    if(privateKey !== "") {
-        sessionStorage.setItem("private_key_user", privateKey);
-    }
-    if(publicKey !== "") {
-        sessionStorage.setItem("public_key_user", publicKey);
-    }
-</script>
+<script src="js/autosize.js"></script>
+<script src="js/cryptochat.js"></script>
 </body>
 <footer>
     <div class="container">
