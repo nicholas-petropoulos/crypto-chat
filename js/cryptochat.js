@@ -253,9 +253,13 @@ function getUserMessages(user) {
             if(sessionStorage.getItem("public_key_" + recipient) === null) {
                 // get key and add to storage
                 getKey("public_key", recipient, "");
+            } else {
+
             }
             const msgTextDecrypted = decryptMessage(sessionStorage.getItem("public_key_"+recipient), msgText);
-
+            if(msgTextDecrypted === false) {
+                msgTextDecrypted = "Unable to read message";
+            }
            // these are messages LOGGED in user sent
             if(recipient === user) {
                  // if doesMsgExpire = 1, then begin countdown based on time expire
@@ -344,7 +348,7 @@ function getKey(keytype, user, usrpin) {
     }).done(function (success) {
         var keyString = keytype + "_" + user;
         sessionStorage.setItem(keyString, success.toString());
-        alert(sessionStorage.getItem(keyString));
+        //alert(sessionStorage.getItem(keyString));
     });
 }
 
