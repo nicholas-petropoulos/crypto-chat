@@ -5,6 +5,10 @@
  * Date: 11/21/2018
  * Time: 7:56 PM
  */
+// sessions last for 24 hours
+ini_set('session.gc_maxlifetime', 86400);
+// cookies also last for 24 hours
+session_set_cookie_params(86400);
 session_start();
 
 if(isset($_SESSION["username"])) {
@@ -49,13 +53,12 @@ if(isset($_POST['btn-login'])){
     } else {
         $securityPIN = strtolower(trim($_POST['security-pin']));
     }
-    echo $securityPIN;
 
     if($usernameError == "" && $passwordError=="" && $noSecurityPINError == ""){
         // get key from db
         $encryptedPrivateKey = $userObj->getKey("private_key", $username);
         // turn off error reporting or we get an error for wrong key
-        error_reporting(0);
+        //error_reporting(0);
 
         // returns string or false on failure
         $pkeyTest = openssl_pkey_get_private($encryptedPrivateKey, $securityPIN);
@@ -64,13 +67,14 @@ if(isset($_POST['btn-login'])){
             $securityPINError = "Incorrect PIN entered.";
         }
         // get unencrypted
-        openssl_pkey_export($pkeyTest,$privateKey,null, $config);
+        openssl_pkey_export($pkeyTest,$privateKey,null, $openSSLConfig);
 
         echo "Decrypted private key: " . $privateKey;
         if($securityPINError == "") {
-            // get public key
-
-            $_SESSION['username'] = $username;
+            // these values need to be stored in cookies so they can make requests to get keys later
+            setcookie("username", $username);
+            setcookie("pin", $securityPIN);
+            $_SESSION["username"] = $username;
             // TODO: implement token usage
             $token = md5(uniqid());
             $_SESSION["_token"] = $token;
@@ -162,22 +166,8 @@ if(isset($_POST['btn-login'])){
 <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
 <script src="js/bootstrap.min.js"></script>
-<script>
-    // session storage
-    // keys stored in format private_key_un where un is user for one's own private key or a username for someone else's public key
-    var privateKey = "";
-    var publicKey = "";
-    privateKey = <?php if($privateKey !== "" && $privateKey != false) { echo $privateKey; } ?>;
-    publicKey = <?php if($publicKey !== "") { echo $publicKey; } ?>;
-    if(privateKey !== "") {
-        sessionStorage.setItem("private_key_user", privateKey);
-        alert(sessionStorage.getItem("private_key_user"));
-    }
-    if(publicKey !== "") {
-        sessionStorage.setItem("public_key_user", publicKey);
-        alert(sessionStorage.getItem("public_key_user"));
-    }
-</script>
+<script src="js/autosize.js"></script>
+<script src="js/cryptochat.js"></script>
 </body>
 <footer>
     <div class="container">
