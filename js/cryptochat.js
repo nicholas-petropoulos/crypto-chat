@@ -5,23 +5,43 @@ const usernameLabel = $("#username-label");
 // used to differentiate timer elements created
 var msgCounter = 0;
 var largestMsgID = 0;
+var userPublicKey = "";
+var userPrivateKey = "";
 
 $(document).ready(function () {
-    // message updating should pause when sending a message to prevent lag
-    //var isMessageCheckPaused = false;
-    // get messages
-    getUserMessages(encodeHTML(usernameLabel.text()));
-   // getUserMessages($("#username-label").text()).then(() => {
-        setInterval(function () {
+    // function only executes if we are on chat page where class=chat
+    $(function(){
+        if($('body').is('.chat')){
+            // get keys on chat page
+            const usernameCookie = getCookie("username");
+            const pinCookie = getCookie("pin");
+            // if public key and private keys not stored, then grab them
+            if(sessionStorage.getItem("public_key_"+usernameCookie) === null ||
+                (sessionStorage.getItem("public_key_"+usernameCookie) === "")) {
+                getKey("public_key", usernameCookie, pinCookie);
+                userPublicKey = sessionStorage.getItem("public_key_"+usernameCookie);
+            }
+            if(sessionStorage.getItem("private_key_"+usernameCookie) === null ||
+                (sessionStorage.getItem("private_key_"+usernameCookie) === "")) {
+                getKey("private_key", usernameCookie, pinCookie);
+                userPrivateKey = sessionStorage.getItem("public_key_"+usernameCookie);
+            }
+            // only get messages on chat page
             getUserMessages(encodeHTML(usernameLabel.text()));
-        }, 10000);
- //   });
-    //reset msg counter
-    msgCounter = 0;
-    // applies auto-resizing functionality to message field
-    autosize(document.querySelector("#msg-field"));
+            // getUserMessages($("#username-label").text()).then(() => {
+            setInterval(function () {
+                getUserMessages(encodeHTML(usernameLabel.text()));
+            }, 10000);
+            //   });
+            //reset msg counter
+            msgCounter = 0;
+            // applies auto-resizing functionality to message field
+            autosize(document.querySelector("#msg-field"));
+        }
+    });
+
     btnMsgSend.on("click", function () {
-        //addMessage("self")
+        addMessage("self");
     });
     msgField.keypress(function (e) {
         let key = e.which;
@@ -93,11 +113,13 @@ function addMessage(party) {
         const recipientUsername = encodeHTML(usernameLabel.text());
         // retrieve key
         //const encryptedMessage = getKeyAndEncrypt("public_key", recipientUsername);
-        //alert(encryptedMessage);
-        encryptTest();
-
-        // send message off // TODO change to encrypted later for sendMessageDB
-        sendMessageDB(msgText, recipientUsername, dropdownTimeSeconds, doesMessageExpire);
+        if(sessionStorage.getItem("public_key_" + recipientUsername) === null) {
+            // get key and add to storage
+            getKey("public_key", recipientUsername, "");
+        }
+        const recipientPublicKey = sessionStorage.getItem("public_key_" + recipientUsername);
+        const encryptedText = encryptMessage(recipientPublicKey, msgText);
+        sendMessageDB(encryptedText, recipientUsername, dropdownTimeSeconds, doesMessageExpire);
         // generate link
         if ($("#generate-link-checkbox").checked === true) {
             // do stuff
@@ -226,17 +248,25 @@ function getUserMessages(user) {
            // const timeExpire = data[i].time_expire;
             const isMsgRead =  data[i].is_msg_read;
             const msgReadDate = data[i].msg_read_date;
+
+            // check if desired key exists in session
+            if(sessionStorage.getItem("public_key_" + recipient) === null) {
+                // get key and add to storage
+                getKey("public_key", recipient, "");
+            }
+            const msgTextDecrypted = decryptMessage(sessionStorage.getItem("public_key_"+recipient), msgText);
+
            // these are messages LOGGED in user sent
             if(recipient === user) {
-                // if doesMsgExpire = 1, then begin countdown based on time expire
+                 // if doesMsgExpire = 1, then begin countdown based on time expire
                 if(doesMsgExpire === 1 && isMsgRead === 0) {
-                    addChatBubble(msgID, msgText, "self", msgDate, msgExpire, false);
+                    addChatBubble(msgID, msgTextDecrypted, "self", msgDate, msgExpire, false);
                 // the timer will need to continue from whatever point the message expires if the user leads the page
                 } else if(isMsgRead === "1") {
                     // TODO: GET TIME DIFFERENCE TO CONTINUE TIMER
                 } else {
                     // messageOpened = false because message won't expire
-                    addChatBubble(msgID, msgText, "self", msgDate, -1, false);
+                    addChatBubble(msgID, msgTextDecrypted, "self", msgDate, -1, false);
                 }
             // this is on the sender's site - we do not update message because it only occurs when a recipient opens a message
             } else {
@@ -245,7 +275,7 @@ function getUserMessages(user) {
                     // message had been read - message deleting handled by backend
                     updateMessage(msgID, 1, recipient);
                     // message will start counting down on user's side
-                    addChatBubble(msgID, msgText, "sender", msgDate, msgExpire, true);
+                    addChatBubble(msgID, msgTextDecrypted, "sender", msgDate, msgExpire, true);
                 } else if(isMsgRead === 1) {
                     // TODO: GET TIME DIFFERENCE TO CONTINUE TIMER
                     // get timestamp
@@ -254,7 +284,7 @@ function getUserMessages(user) {
 
                 } else {
                     // OWN messages do not expire on client's side
-                    addChatBubble(msgID, msgText, "sender", msgDate, 0, false);
+                    addChatBubble(msgID, msgTextDecrypted, "sender", msgDate, 0, false);
                 }
             }
         }
@@ -279,9 +309,7 @@ function updateMessage(msgID, msgRead, user) {
             username: user
         },
         async: true
-    }).done(function (success) {
-        var response = success.responseText;
-    });
+    })
 }
 
 
@@ -296,21 +324,27 @@ function displayUsernameInput() {
     usernameField.focus();
 }
 
-// keytype can = public_key or private_key
-function getKeyAndEncrypt(keytype, user, message, authkey) {
+/**
+ * Get a public or private key and store in user's browser session
+ * @param keytype: public_key or private_key
+ * @param user: username
+ * @param usrpin: user's pin
+ */
+function getKey(keytype, user, usrpin) {
     $.ajax({
-        method: "POST",
+        method: "GET",
         url: "includes/request.php",
         data: {
-            option: "reqkey",
+            option: "getkey",
             type: keytype,
             reqUser: user,
-            auth: authkey,
+            pin: usrpin
         },
         async: false
     }).done(function (success) {
-        alert(success.responseText);
-         return encryptMessage(success.responseText, message);
+        var keyString = keytype + "_" + user;
+        sessionStorage.setItem(keyString, success.toString());
+        alert(sessionStorage.getItem(keyString));
     });
 }
 
@@ -321,79 +355,27 @@ function getKeyAndEncrypt(keytype, user, message, authkey) {
  * @returns encrypted string
  */
 function encryptMessage(key, text) {
-    alert(key);
-    alert(text);
-    var e = new JSEncrypt();
-    e.setPublicKey(key);
-    e.encrypt(text);
-
-    return e;
+    const e = new JSEncrypt();
+    if(key !== "") {
+        e.setPublicKey(key);
+    }
+    return e.encrypt(text);
 }
 
-function encryptTest() {
-    var pubKey = "-----BEGIN PUBLIC KEY----- MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAscPpWPeAdcLzDNUh5/Zb xAK5ZmEZkj75Z4paI/UcRd81MNaHcH3f9hWRmJs2ZXpZrD4ic5JhgpWfogpPku9c gL5Fjslg5QP+afxDymMrm/tRvc3pE11OdzwLygGEwXY8bEreUg+WK0hqcwt3abTX 4MgK7K/EOVDjwui2GSKlIpBGgG/zG1AlNmT2NFvgEjv+WqK1MB1k6tfdHzDwdquX qet1Gb2Rx7aVmbkHyrHOzKE0m78JxnEQw7WrFrmAdv1Iws+u/ZN3p5O5c5KXn2e7 ZDoIOaVI6CHeqsTUAd0zYeJY2GTMR6/8vsx3FgbZ0tcfnA0laPJh/FKx9xi8yNib UB060AQSwmlbwJXoeoxXEnctwLWy2Q/U+o6ZQK/dFV2gG32aV9xtOvWwnaA0deOI kF5YQ5ls3gr8l2QWaxkbZE7nLbZb/YYVkmKyXJbccMe2I9nW08ypN+UgkFc/iQFl KeYyASggZ4E6kmiUmLbHTgnU1Qjm5+lbdHl4v6C2cctFw82MPuYQcRaODfet4MDN MpEVp3Jj6ykxhte6NdYnwMrMN4uGZu5SGjI90Rz2g9/XPRN5l/ZAzh/Y3G8MPchR /1UkP1pkLThBaKAMYLd8a6WxJtbDTEtEoCALDJwlr0jhdHf0tfDy6/88EOErEKS7 0edmu5zQuzcnLPtkGGIt3dsCAwEAAQ== -----END PUBLIC KEY-----";
-    var en = new JSEncrypt();
-    var msg = "HELLO!!!";
-    en.setPublicKey(pubKey);
-    var msgEncrypt = en.encrypt(msg);
-    alert(msgEncrypt);
-
-    // decrypt
-    var decrypt = en.setPrivateKey("-----BEGIN PRIVATE KEY-----\n" +
-        "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\n" +
-        "KthsPk/BGKdkjoaJucIQgr1H184gtg7k\n" +
-        "-----END PRIVATE KEY-----\n")
-    var decryptedText = en.decrypt(msgEncrypt);
-    alert(decryptedText);
+/**
+ * Encrypts messages
+ * @param key
+ * @param text
+ * @returns encrypted string
+ */
+function decryptMessage(key, text) {
+    const e = new JSEncrypt();
+    if(key !== "") {
+        e.setPrivateKey(key);
+    }
+    return e.decrypt(text);
 }
+
 
 
 /**
@@ -467,4 +449,21 @@ function getTime(asTimestamp) {
 function isGenerateLink() {
 //TODO: implement method
 
+}
+
+// https://www.w3schools.com/js/js_cookies.asp
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) === ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) === 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }
