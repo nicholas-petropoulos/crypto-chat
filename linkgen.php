@@ -10,22 +10,24 @@ session_start();
 
 include "includes/config.php";
 
-$username = "";
-$option = "";
-// user does not have to be logged in ot view page
+$username = $option = $messageID = "";
+
+// message does not have to be logged in ot view page
 if(isset($_SESSION["username"])) {
     $username = $_SESSION["username"];
 }
 //
 if(isset($_REQUEST["option"])) {
     $session = $_REQUEST["option"];
+    $messageID = $_REQUEST["msg_id"];
+    $messageText = $_REQUEST["msg_text"];
 }
-$messageID = 0;
+
 $uniqueID = 0;
 $isViewingMsg = false;
 
 // only can generate link if logged in
-if($option == "linkgen" && isset($username)) {
+if($option == "linkgen" && $username != "") {
     // put message details on page
     $uniqueID = uniqid("msg");
     // OR openssl_random_pseudo_bytes($length)
