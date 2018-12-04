@@ -24,7 +24,7 @@ function trimAndQuery($fieldNameParam) {
         // if returns true
         if($sql) {
             // s = type string, $fieldNameParam is the name of the field (ie. username)
-            // $fieldName is the user's input
+            // $fieldName is the message's input
             $sql->bind_param("s", $userInput);
             // execute query
             $sql->execute();
@@ -39,7 +39,7 @@ function trimAndQuery($fieldNameParam) {
         }
         $sql->close();
     }
-    // return user input and empty string if no error
+    // return message input and empty string if no error
     return [$userInput, ""];
 }
 ?>

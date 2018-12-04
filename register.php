@@ -8,7 +8,7 @@
 
 include "includes/config.php";
 include "includes/functions.php";
-include "includes/user.php";
+include "includes/message.php";
 
 // session configuration - 24 hours default
 ini_set('session.gc_maxlifetime', 86400);
@@ -26,7 +26,7 @@ $usernameError = $emailError = $passwordError = $confirmPasswordError = $passwor
  *  Password
  *  PIN
  */
-$userObj = new user();
+$msgObj = new message();
 
 if (isset($_POST["btn-submit"])) {
     // returns an error if unsuccessful, otherwise returns empty string
@@ -73,7 +73,7 @@ if (isset($_POST["btn-submit"])) {
 
         // generate public and private key
         if($key = openssl_pkey_new($openSSLConfig)) {
-            // use unencrypted version and store in user's session
+            // use unencrypted version and store in message's session
             openssl_pkey_export($key, $privateKey, null, $openSSLConfig);
             // Extract private key from $key to $privKey - use pin to encrypt key in DB
             openssl_pkey_export($key, $privateKeyEncrypted, $securityPIN, $openSSLConfig);
@@ -99,10 +99,10 @@ if (isset($_POST["btn-submit"])) {
                 $_SESSION["_token"] = $token;
                 header("Location: chat.php");
             } else {
-                echo "Error creating user, contact administrator";
+                echo "Error creating message, contact administrator";
             }
         } else {
-            echo "Error creating user, contact administrator";
+            echo "Error creating message, contact administrator";
         }
 
 

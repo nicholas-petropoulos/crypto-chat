@@ -18,7 +18,7 @@ $(document).ready(function () {
             // if public key and private keys not stored, then grab them
             if(sessionStorage.getItem("public_key_"+usernameCookie) === null ||
                 (sessionStorage.getItem("public_key_"+usernameCookie) === "")) {
-                getKey("public_key", usernameCookie, pinCookie);
+                getKey("public_key", usernameCookie, "");
                 userPublicKey = sessionStorage.getItem("public_key_"+usernameCookie);
             }
             if(sessionStorage.getItem("private_key_"+usernameCookie) === null ||
@@ -214,7 +214,7 @@ function sendMessageDB(message, recipient, seconds, doesExpire) {
         data: {
             option: "sendmessage",
             messageText: message,
-            reqUser: recipient, // user to send to
+            reqUser: recipient, // message to send to
             expires: doesExpire, // expires
             timeExpire: seconds //SECONDS
         },
@@ -253,19 +253,15 @@ function getUserMessages(user) {
             if(sessionStorage.getItem("public_key_" + recipient) === null) {
                 // get key and add to storage
                 getKey("public_key", recipient, "");
-            } else {
-
             }
-            const msgTextDecrypted = decryptMessage(sessionStorage.getItem("public_key_"+recipient), msgText);
-            if(msgTextDecrypted === false) {
-                msgTextDecrypted = "Unable to read message";
-            }
-           // these are messages LOGGED in user sent
-            if(recipient === user) {
+            // returns false if unsuccessful
+            var msgTextDecrypted = decryptMessage(sessionStorage.getItem("private_key_"+recipient), msgText);
+            console.log(msgTextDecrypted);
+            if((recipient === user) && msgTextDecrypted !== false) {
                  // if doesMsgExpire = 1, then begin countdown based on time expire
                 if(doesMsgExpire === 1 && isMsgRead === 0) {
                     addChatBubble(msgID, msgTextDecrypted, "self", msgDate, msgExpire, false);
-                // the timer will need to continue from whatever point the message expires if the user leads the page
+                // the timer will need to continue from whatever point the message expires if the message leads the page
                 } else if(isMsgRead === "1") {
                     // TODO: GET TIME DIFFERENCE TO CONTINUE TIMER
                 } else {
@@ -273,12 +269,12 @@ function getUserMessages(user) {
                     addChatBubble(msgID, msgTextDecrypted, "self", msgDate, -1, false);
                 }
             // this is on the sender's site - we do not update message because it only occurs when a recipient opens a message
-            } else {
+            } else if(msgTextDecrypted !== false) {
                 if(doesMsgExpire === 1 && isMsgRead === 0) {
                     // send update to server now
                     // message had been read - message deleting handled by backend
                     updateMessage(msgID, 1, recipient);
-                    // message will start counting down on user's side
+                    // message will start counting down on message's side
                     addChatBubble(msgID, msgTextDecrypted, "sender", msgDate, msgExpire, true);
                 } else if(isMsgRead === 1) {
                     // TODO: GET TIME DIFFERENCE TO CONTINUE TIMER
@@ -297,7 +293,7 @@ function getUserMessages(user) {
 }
 
 /**
- * Updates the status of message in DB to read when user gets it
+ * Updates the status of message in DB to read when message gets it
  * @param msgID: message ID to find in DB to update
  * @param msgRead: 1 or 0, 1=read
  * @param user: MUST BE LOGGED IN USER
@@ -329,10 +325,10 @@ function displayUsernameInput() {
 }
 
 /**
- * Get a public or private key and store in user's browser session
+ * Get a public or private key and store in message's browser session
  * @param keytype: public_key or private_key
  * @param user: username
- * @param usrpin: user's pin
+ * @param usrpin: message's pin
  */
 function getKey(keytype, user, usrpin) {
     $.ajax({
@@ -356,28 +352,32 @@ function getKey(keytype, user, usrpin) {
  * Encrypts messages
  * @param key
  * @param text
- * @returns encrypted string
+ * @returns string string
  */
 function encryptMessage(key, text) {
     const e = new JSEncrypt();
     if(key !== "") {
         e.setPublicKey(key);
     }
-    return e.encrypt(text);
+    const msgEncrypted = e.encrypt(text);
+    //console.log(msgEncrypted);
+    return msgEncrypted;
 }
 
 /**
  * Encrypts messages
  * @param key
  * @param text
- * @returns encrypted string
+ * @returns string
  */
 function decryptMessage(key, text) {
     const e = new JSEncrypt();
     if(key !== "") {
         e.setPrivateKey(key);
     }
-    return e.decrypt(text);
+    const msgDecrypted = e.decrypt(text);
+    //console.log(msgDecrypted);
+    return msgDecrypted;
 }
 
 
@@ -415,7 +415,7 @@ function initLocalCountdownDelete(duration, mExpireElement, mDateElement, cBubbl
 }
 
 /**
- * Gets the dropdown time in seconds to determine how long the user wishes to keep the message
+ * Gets the dropdown time in seconds to determine how long the message wishes to keep the message
  * @returns {number} - seconds
  */
 function getMessageExpireTime() {
@@ -435,7 +435,7 @@ function getMessageExpireTime() {
 }
 
 /**
- * Returns user's local time to display on messages
+ * Returns message's local time to display on messages
  * @returns {*|string}
  */
 function getTime(asTimestamp) {
@@ -450,9 +450,25 @@ function getTime(asTimestamp) {
     return moment(timeLocal).local().format('YYYY-MM-DD HH:mm:ss');
 }
 
-function isGenerateLink() {
-//TODO: implement method
-
+/**
+ * Generate a link to share off-site
+ * @param msgID
+ * @param msgText
+ */
+function generateLink(msgID, msgText) {
+    $.ajax({
+        method: "POST",
+        url: "includes/request.php",
+        data: {
+            option: "linkgen",
+            msg_ID: msgID,
+            msg_text: msgText,
+            username: user
+        },
+        async: true
+    }).done(function (success) {
+        // get link and add message like that
+    });
 }
 
 // https://www.w3schools.com/js/js_cookies.asp
