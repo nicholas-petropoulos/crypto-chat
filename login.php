@@ -16,13 +16,13 @@ if(isset($_SESSION["username"])) {
 }
 
 include "includes/config.php";
-include "includes/user.php";
+include "includes/message.php";
 
 $username = $password = $securityPIN = "";
 $usernameError = $passwordError = $securityPINError = $noSecurityPINError = $loginError = "";
 $publicKey = $privateKey = "";
 
-$userObj = new user();
+$msgObj = new message();
 
 if(isset($_POST['btn-login'])){
     if(trim($_POST['username'])=="") {
@@ -56,7 +56,7 @@ if(isset($_POST['btn-login'])){
 
     if($usernameError == "" && $passwordError=="" && $noSecurityPINError == ""){
         // get key from db
-        $encryptedPrivateKey = $userObj->getKey("private_key", $username);
+        $encryptedPrivateKey = $msgObj->getKey("private_key", $username);
         // turn off error reporting or we get an error for wrong key
         //error_reporting(0);
 

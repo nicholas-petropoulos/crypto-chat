@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by IntelliJ IDEA.
- * user: Nicholas
+ * message: Nicholas
  * Date: 11/21/2018
  * Time: 8:31 PM
  */
@@ -9,12 +9,12 @@
 // session configuration - 24 hours default
 ini_set('session.gc_maxlifetime', 86400);
 session_start();
-include "includes/user.php";
+include "includes/message.php";
 $username = $_SESSION["username"];
 if (isset($username)) {
+//
 
-
-// change getUserMessages to logged in user - currently testing
+// change getUserMessages to logged in message - currently testing
     ?>
 
     <!DOCTYPE html>
@@ -103,7 +103,7 @@ if (isset($username)) {
 
                         </div>
                         <div class="panel-body panel-chat-body">
-                            <div class="msg-detail">Your messages will show up here - start a new conversation above by clicking "New Chat"</div>
+                            <div class="msg-detail">Start a new conversation above by clicking "New Chat"</div>
                             <br>
                             <!--<div class="msg-detail"><span id="msg-date">XX/XX/XXXX</span>&nbsp-&nbsp;<span id="msg-expire">XX:XX:XX</span></div>-->
                             <!--<div class="chat-bubble chat-sender">Hello there test</div>-->
@@ -121,8 +121,8 @@ if (isset($username)) {
                                 <select class="form-control form-control-sm msg-timer-dropdown">
                                     <option>10 seconds</option>
                                     <option>1 minute</option>
-                                    <option>1 hour</option>
-                                    <option>24 hours</option>
+                                    <!--<option>1 hour</option>-->
+                                    <!--<option>24 hours</option>-->
                                     <option>Never</option>
                                 </select>
                          <div class="form-check">
