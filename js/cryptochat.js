@@ -110,7 +110,12 @@ function addMessage(party) {
         // encrypt with recipient's public key
 
         // search page for recipient getting from
-        const recipientUsername = encodeHTML(usernameLabel.text());
+        var recipientUsername = encodeHTML(usernameLabel.text());
+        // if no username is entered, messages get sent to "default" user
+        if(recipientUsername.trim() === "" || recipientUsername == null) {
+            // this is so we can generate a link even if a user is not selected
+            recipientUsername = "default";
+        }
         // retrieve key
         //const encryptedMessage = getKeyAndEncrypt("public_key", recipientUsername);
         if(sessionStorage.getItem("public_key_" + recipientUsername) === null) {
@@ -121,8 +126,10 @@ function addMessage(party) {
         const encryptedText = encryptMessage(recipientPublicKey, msgText);
         sendMessageDB(encryptedText, recipientUsername, dropdownTimeSeconds, doesMessageExpire);
         // generate link
-        if ($("#generate-link-checkbox").checked === true) {
-            // do stuff
+        if ($("#generate-link-checkbox").prop("checked")) {
+            // generate link not encrypted or non-logged in users could not see
+            console.log("Generating link");
+            generateLink(msgText);
         }
 
     }
@@ -214,11 +221,11 @@ function sendMessageDB(message, recipient, seconds, doesExpire) {
         data: {
             option: "sendmessage",
             messageText: message,
-            reqUser: recipient, // message to send to
+            recipient: recipient, // message to send to
             expires: doesExpire, // expires
             timeExpire: seconds //SECONDS
         },
-        async: true
+        async: false
     });
 }
 
@@ -455,19 +462,18 @@ function getTime(asTimestamp) {
  * @param msgID
  * @param msgText
  */
-function generateLink(msgID, msgText) {
+function generateLink(msgText) {
     $.ajax({
         method: "POST",
-        url: "includes/request.php",
+        url: "linkgen.php",
         data: {
             option: "linkgen",
-            msg_ID: msgID,
-            msg_text: msgText,
-            username: user
+            msg_text: msgText
         },
-        async: true
+        async: false
     }).done(function (success) {
-        // get link and add message like that
+        $("#link-area").text(success.toString());
+    }).fail(function() {
     });
 }
 
