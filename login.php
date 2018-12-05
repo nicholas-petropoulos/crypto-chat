@@ -58,18 +58,16 @@ if(isset($_POST['btn-login'])){
         // get key from db
         $encryptedPrivateKey = $msgObj->getKey("private_key", $username);
         // turn off error reporting or we get an error for wrong key
-        //error_reporting(0);
+        error_reporting(0);
 
         // returns string or false on failure
         $pkeyTest = openssl_pkey_get_private($encryptedPrivateKey, $securityPIN);
-        echo "test: ". $pkeyTest;
         if($pkeyTest == false){
             $securityPINError = "Incorrect PIN entered.";
         }
         // get unencrypted
         openssl_pkey_export($pkeyTest,$privateKey,null, $openSSLConfig);
 
-        echo "Decrypted private key: " . $privateKey;
         if($securityPINError == "") {
             // these values need to be stored in cookies so they can make requests to get keys later
             setcookie("username", $username);
