@@ -128,6 +128,7 @@ if (isset($username)) {
                          <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="generate-link-checkbox">
                             <label class="form-check-label">Generate link?</label>
+                             <p id="link-area"></p>
                           </div>
                     </span>
 
