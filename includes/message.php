@@ -9,6 +9,12 @@ include "config.php";
 
 class message {
     // $type = public_key or private_key
+    /**
+     * Get a user's public or private key
+     * @param $type
+     * @param $username
+     * @return string
+     */
     function getKey($type, $username) {
         global $con;
         $sql = $con->prepare("SELECT $type FROM users WHERE username=?");
@@ -27,6 +33,12 @@ class message {
         return "";
     }
 
+    /**
+     * Get user's private key and decrypt using pin
+     * @param $pin
+     * @param $username
+     * @return mixed
+     */
     function getDecryptedPrivateKey($pin, $username) {
         global $openSSLConfig;
         $encryptedKey = $this->getKey("private_key", $username);
@@ -41,6 +53,12 @@ class message {
 
     // array format - $arr = [[$msg],[$msg],[$msg],[$msg]...]
     // return array [$recipientUsername, $messageText, $messageDate, $timeExpire]
+    /**
+     * Reuturn all messages to and from the user
+     * @param $username
+     * @param $recUsername
+     * @return array|string
+     */
     function getUserMessages($username, $recUsername)
     {
         global $con;
@@ -60,7 +78,6 @@ class message {
                 while ($row = $result->fetch_assoc()) {
                     $messageID = $row["message_id"];
                     $messageText = $row["message_text"];
-                    // TODO: DECRYPT
                     $messageDate = $row["message_date"];
                     // does the message expire or no
                     $expires = $row["expires"];
@@ -72,21 +89,9 @@ class message {
                     $recipientUsername = $row["recipient_username"];
                     // check if message should be deleted
                     if (($messageReadDate != null) && $isMessageRead == 1) {
-                        // convert time to UNIX TIMESTAMP using mysql
-                        $sqlTime = $con->query("SELECT UNIX_TIMESTAMP('" . $messageReadDate . "');") or die($con->error);
-                        //die($con->error);
-                        //$resultTime = reset($sqlTime->fetch_assoc());
-                        //$str = "UNIX_TIMESTAMP(' " . $messageReadDate ." ')";
-                        $timestampArr = $sqlTime->fetch_array();
-                        $timestamp = $timestampArr[0];
-                        //echo "Time: " .time();
-                        //echo "<br>";
-                        //echo "DB time: " .$timestamp;
-                        //time in seconds > message read time + expire time
-                        if(time() >= $timestamp+$timeExpire) {
-                            $this->deleteMessage($messageID);
-                            $msgDeleted = true;
-                        }
+                        // add a timestamp
+                        $timestamp = $this->convertReadDateToTimestamp($messageReadDate);
+                        $msgDeleted = $this->checkAndDeleteMessage($timeExpire,$messageID, $timestamp);
                     }
                     if(!$msgDeleted) {
                         $messages[] = ["msg_id" => $messageID, "recipient_user" => $recipientUsername, "msg_text" => $messageText,
@@ -105,11 +110,59 @@ class message {
     }
 
     /**
+     * Returns the last message from a specified user
+     * used in link generation
+     * @param $username
+     * @return string|null|string
+     */
+    function getLastMessageID($username) {
+        global $con;
+        $sql = $con->prepare("SELECT message_id FROM messages WHERE sender_username=? ORDER BY message_id DESC LIMIT 1");
+        if ($sql) {
+            $sql->bind_param("s", $username);
+            $sql->execute();
+            $result = $sql->get_result();
+            if ($result->num_rows > 0) {
+                while($row = $result->fetch_assoc()) {
+                    return $row["message_id"];
+                }
+            }
+            $sql->close();
+            return "";
+        }
+        return "";
+    }
+
+    /**
+     * Returns expiration details for link generation
+     * @param $messageID
+     * @return array|string
+     */
+    function getMessageExpireDetailsByID($messageID) {
+        global $con;
+        $sql = $con->prepare("SELECT * FROM messages WHERE message_id=?");
+        if ($sql) {
+            $sql->bind_param("s", $messageID);
+            $sql->execute();
+            $result = $sql->get_result();
+            if ($result->num_rows > 0) {
+                while($row = $result->fetch_assoc()) {
+                    return [$row["message_read_date"], $row["time_expire"], $row["expires"], $row["message_read"]];
+                }
+            }
+            $sql->close();
+            return "";
+        }
+        return "";
+    }
+
+    /**
      * @param $timeExpire
      * @param $senderUsername
      * @param $recipientUsername
      * @param $messageText
      * @param $expires
+     * @return bool
      */
     function addMessage($timeExpire, $senderUsername, $recipientUsername, $messageText, $expires) {
         global $con;
@@ -118,10 +171,13 @@ class message {
             if ($sql->bind_param("sssss", $timeExpire, $senderUsername, $recipientUsername, $messageText, $expires)) {
                 $sql->execute();
                 $sql->close();
+                return true;
             } else {
                 echo "Unable to process message";
+                return false;
             }
         }
+        return false;
     }
 
     /**
@@ -166,6 +222,7 @@ class message {
      * @param $messageID
      * @param $messageText
      * @param $linkLocation
+     * @return bool
      */
     function addGeneratedLink($messageID, $linkLocation, $messageText) {
         global $con;
@@ -173,12 +230,110 @@ class message {
             if($sql->bind_param("sss", $messageID, $linkLocation, $messageText)) {
                 $sql->execute();
                 $sql->close();
+                return true;
             } else {
                 echo "Unable to add generated link";
-            } 
+                return false;
+            }
         } else {
-            echo "Unable to generated link";
+            echo "Unable to generate link";
+            return false;
         }
     }
+
+    /**
+     * @param $generatedLinkID
+     * @return bool
+     */
+    function getGeneratedLinkMessage($generatedLinkID) {
+        global $con;
+        $messageID = "";
+        if($sql = $con->prepare("SELECT * FROM generated_links WHERE link_location=?")) {
+            if($sql->bind_param("s", $generatedLinkID)) {
+                $sql->execute();
+                $result = $sql->get_result();
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        return $row["message_text"];
+                    }
+                    return false;
+                }
+                $sql->close();
+                return false;
+            } else {
+                echo "Unable to get generated link";
+                return false;
+            }
+        } else {
+            echo "Unable to get link";
+            return false;
+        }
+    }
+
+    /**
+     * Get message ID from generated links
+     * @param $generatedLinkLocation
+     * @return string
+     */
+    function getGeneratedLinkMessageID($generatedLinkLocation) {
+        global $con;
+        if($sql = $con->prepare("SELECT * FROM generated_links WHERE link_location=?")) {
+            if($sql->bind_param("s", $generatedLinkLocation)) {
+                $sql->execute();
+                $result = $sql->get_result();
+                if($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        return $row["message_id"];
+                    }
+                }
+                $sql->close();
+            } else {
+                echo "Unable to add generated link";
+                return "";
+            }
+        } else {
+            echo "Unable to generate link";
+            return "";
+        }
+        return "";
+    }
+
+    /**
+     * Adds a read timestamp and returns value
+     * @param $con
+     * @param $messageReadDate
+     * @param $timeExpire
+     * @param $messageID
+     * @return bool
+     */
+    public function convertReadDateToTimestamp($messageReadDate) {
+        global $con;
+        if($messageReadDate != NULL) {
+            $sqlTime = $con->query("SELECT UNIX_TIMESTAMP('" . $messageReadDate . "');") or die($con->error);
+            $timestampArr = $sqlTime->fetch_array();
+            $timestamp = $timestampArr[0];
+            //$msgDeleted = $this->checkIfMessageShouldDelete($timeExpire, $messageID, $timestamp);
+            return $timestamp;
+        }
+        return "";
+    }
+
+    /**
+     * Checks if a message has expired and proceeds to delete it
+     * @param $timeExpire
+     * @param $messageID
+     * @param $timestamp
+     * @return bool
+     */
+    public function checkAndDeleteMessage($timeExpire, $messageID, $timestamp)
+    {
+        $msgDeleted = false;
+        if (time() >= $timestamp + $timeExpire) {
+            $this->deleteMessage($messageID);
+            $msgDeleted = true;
+        }
+        return $msgDeleted;
+    }
+
 
 }
