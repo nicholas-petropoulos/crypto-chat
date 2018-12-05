@@ -13,7 +13,10 @@ ini_set("display_errors", 1);
 include "config.php";
 include "message.php";
 
-$username = $_SESSION["username"];
+if(isset($_SESSION["username"])) {
+    $username = $_SESSION["username"];
+}
+
 // POST option
 $option = trim($_REQUEST["option"]);
 // message object
@@ -25,54 +28,66 @@ $msgObj = new message();
 // Potential options
 // add message to database
 // TODO: Sanitize Input more
-if($option == "sendmessage") {
-    $messageText = $_REQUEST["messageText"];
-    // 1 = true, 0 = false
-    $expires = $_REQUEST["expires"];
-    // seconds message is alive
-    $timeExpire = $_REQUEST["timeExpire"];
-    // message to send message
-    $reqUser = $_REQUEST["reqUser"];
-    if($expires == "true") {
-        $expires = 1;
-    } else {
-        $expires = 0;
-    }
-    $msgObj->addMessage($timeExpire, $username, $reqUser, $messageText, $expires);
-// to encrypt and send message
-} else if($option == "getkey") {
-    if($_REQUEST["type"] == "public_key") {
-        $reqUser = $_REQUEST["reqUser"];
-        echo $msgObj->getKey("public_key", $reqUser);
-    // Only can request own private key
-    } else if(($_REQUEST["type"] == "private_key") && $_REQUEST["reqUser"] == $username) {
-        $pin = trim($_REQUEST["pin"]);
-        $reqUser = $_REQUEST["reqUser"];
-        echo $msgObj->getDecryptedPrivateKey($pin, $reqUser);
-    }
-// need to send update that message has been read
-} else if($option == "getmessages") {
-    header('Content-type: application/json');
-    // requested message messages
-    $reqUser = $_REQUEST["reqUser"];
-    $messages = $msgObj->getUserMessages($username, $reqUser);
-    if($messages != null && $messages != "") {
-        $msgArray = array_values($messages);
-        echo json_encode($msgArray);
-    } else {
-        echo "No messages returned";
-    }
+if($username != "") {
+    if ($option == "sendmessage") {
+        $messageText = $_REQUEST["messageText"];
+        // 1 = true, 0 = false
+        $expires = $_REQUEST["expires"];
+        // seconds message is alive
+        $timeExpire = $_REQUEST["timeExpire"];
+        // message to send message
+        $reqUser = "";
+        // reqUser does not need to be set 
+        if(isset($_REQUEST["recipient"])) {
+            $reqUser = $_REQUEST["recipient"];
+        }
+        if ($expires == "true") {
+            $expires = 1;
+        } else {
+            $expires = 0;
+        }
+        if($msgObj->addMessage($timeExpire, $username, $reqUser, $messageText, $expires)) {
+            echo "Added message";
+        } else {
+            echo "Error adding message";
+        }
 
-} else if($option == "updatemessage") {
-    // check if message session matches request message
-    $msgID = $_REQUEST["msg_ID"];
-    $msgRead = $_REQUEST["msg_read"];
-    if($username == $_REQUEST["username"]) {
-        echo "Username match";
-        $msgObj->updateMessage($msgID, $msgRead);
-    } else {
-        echo "Username no match";
+// to encrypt and send message
+    } else if ($option == "getkey") {
+        if ($_REQUEST["type"] == "public_key") {
+            $reqUser = $_REQUEST["reqUser"];
+            echo $msgObj->getKey("public_key", $reqUser);
+            // Only can request own private key
+        } else if (($_REQUEST["type"] == "private_key") && $_REQUEST["reqUser"] == $username) {
+            $pin = trim($_REQUEST["pin"]);
+            $reqUser = $_REQUEST["reqUser"];
+            echo $msgObj->getDecryptedPrivateKey($pin, $reqUser);
+        }
+// need to send update that message has been read
+    } else if ($option == "getmessages") {
+        header('Content-type: application/json');
+        // requested message messages
+        $reqUser = $_REQUEST["reqUser"];
+        $messages = $msgObj->getUserMessages($username, $reqUser);
+        if ($messages != null && $messages != "") {
+            $msgArray = array_values($messages);
+            echo json_encode($msgArray);
+        } else {
+            echo "No messages returned";
+        }
+
+    } else if ($option == "updatemessage") {
+        // check if message session matches request message
+        $msgID = $_REQUEST["msg_ID"];
+        $msgRead = $_REQUEST["msg_read"];
+        if ($username == $_REQUEST["username"]) {
+            echo "Username match";
+            $msgObj->updateMessage($msgID, $msgRead);
+        } else {
+            echo "Username no match";
+        }
     }
+// return last message id for using link generation
 }
 // SEND MESSAGE
 // GET USER CHATS (from left menu)
